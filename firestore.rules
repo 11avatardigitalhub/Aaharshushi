@@ -2,108 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ============================================
-    // HELPER FUNCTIONS
-    // ============================================
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    function isTeamLead() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'team_lead';
-    }
-    
-    function isAgent() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'agent';
-    }
-    
-    function isActiveUser() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;
-    }
-    
-    function ownsLead(leadId) {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/leads/$(leadId)).data.assignedTo == request.auth.uid;
-    }
-    
-    // ============================================
-    // TEMPORARY: ALLOW ALL AUTHENTICATED USERS
-    // (Testing phase - Production me restrict karein)
-    // ============================================
-    
+    // TEMPORARY RULES - Allow all authenticated users full access
+    // Production me isko restrict karein
     match /{document=**} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if request.auth != null;
     }
     
-    // ============================================
-    // PROPER RULES (Production)
-    // ============================================
-    
-    // Users collection
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin();
-      allow update: if isAuthenticated() && 
-                      (request.auth.uid == userId || isAdmin());
-      allow delete: if isAdmin();
-    }
-    
-    // Leads collection
-    match /leads/{leadId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAdmin();
-      
-      // Notes subcollection
-      match /notes/{noteId} {
-        allow read, write: if isAuthenticated();
-      }
-    }
-    
-    // Status history
-    match /status_history/{historyId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Follow-ups
-    match /followups/{followupId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Notifications
-    match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Tenants
-    match /tenants/{tenantId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Teams
-    match /teams/{teamId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Settings
-    match /settings/{settingId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Audit logs
-    match /audit_logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
-    }
   }
 }
