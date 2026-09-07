@@ -2,260 +2,506 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <meta name="description" content="Aahar Shudhi - Multi-Tenant Lead Management System">
-    <meta name="theme-color" content="#2a5c3e">
-    <title>Aahar Shudhi - Multi-Tenant Lead Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aahar Shudhi - Lead Management</title>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #2a5c3e;
+            --primary-bg: #e3f0e5;
+            --white: #fff;
+            --bg: #f0f4f1;
+            --text: #1e3a2f;
+            --muted: #6c757d;
+            --border: #dee2e6;
+            --danger: #dc3545;
+            --danger-bg: #f8d7da;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: var(--bg); min-height: 100vh; }
+        
+        /* Login */
+        #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .login-box { background: white; border-radius: 20px; padding: 40px 30px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; }
+        .login-box h1 { font-size: 1.4rem; color: var(--primary); margin: 15px 0; }
+        .login-box input { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; margin-bottom: 12px; }
+        .login-box button { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 25px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+        #login-error { background: var(--danger-bg); color: #721c24; padding: 10px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 12px; display: none; }
+        
+        /* Dashboard */
+        #dashboard { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        .navbar { background: white; padding: 15px 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .navbar-brand { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        .navbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { padding: 10px 16px; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger-bg); color: #721c24; }
+        
+        .tabs { display: flex; gap: 5px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 15px; overflow-x: auto; }
+        .tab-btn { padding: 10px 16px; border: none; background: transparent; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .metrics-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .metric-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; }
+        .metric-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .metric-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+        
+        .kanban-board { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; }
+        .kanban-column { background: #e9ecef; border-radius: 12px; min-width: 250px; width: 270px; padding: 12px; flex-shrink: 0; }
+        .kanban-column-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: white; border-radius: 8px; margin-bottom: 10px; font-weight: 700; font-size: 0.85rem; }
+        .kanban-count { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
+        .lead-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); cursor: grab; }
+        .lead-card h4 { font-size: 0.85rem; }
+        .lead-card p { font-size: 0.75rem; color: var(--muted); }
+        .lead-card-actions { display: flex; gap: 4px; margin-top: 8px; }
+        .lead-card-actions button { flex: 1; padding: 5px; border: none; border-radius: 12px; cursor: pointer; font-size: 0.65rem; font-weight: 600; }
+        .btn-call { background: #e3f0e5; color: #1e7e34; }
+        .btn-wa { background: #d4edda; color: #155724; }
+        .btn-move { background: #fff3cd; color: #856404; }
+        
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow-x: auto; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { background: #f8f9fa; color: var(--primary); padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
+        td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; padding: 25px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-content h2 { color: var(--primary); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.78rem; margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+        .toast { padding: 12px 18px; border-radius: 10px; color: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
+        .toast-success { background: var(--primary); }
+        .toast-error { background: var(--danger); }
+    </style>
 </head>
 <body>
 
-    <!-- ============ LOGIN SCREEN ============ -->
     <div id="login-screen">
         <div class="login-box">
-            <span class="login-logo">🌿</span>
-            <h1>Aahar Shudhi</h1>
-            <p class="subtitle">Multi-Tenant Lead Management System</p>
+            <h1>🌿 Aahar Shudhi</h1>
+            <p style="color:#6c757d;margin-bottom:20px;">Lead Management System</p>
             <div id="login-error"></div>
-            <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
-            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
-            <button class="btn-login" id="login-btn" onclick="handleLogin()">🔐 Sign In</button>
-            <p class="login-hint">Default Admin: admin@aahar.com / Admin@123</p>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="handleLogin()">🔐 Sign In</button>
+            <p style="margin-top:15px;font-size:0.7rem;color:#6c757d;">admin@aahar.com / Admin@123</p>
         </div>
     </div>
 
-    <!-- ============ DASHBOARD ============ -->
     <div id="dashboard">
-        <!-- NAVBAR -->
         <nav class="navbar">
-            <div class="navbar-brand">
-                <span>🌿</span> Aahar Shudhi
-            </div>
-            <div class="navbar-tenant" id="tenant-badge">🏢 Loading...</div>
-            <div class="navbar-user" id="user-info"></div>
+            <div class="navbar-brand">🌿 Aahar Shudhi</div>
             <div class="navbar-actions">
                 <button class="btn btn-primary" onclick="openLeadModal()">+ Add Lead</button>
+                <button class="btn btn-primary" onclick="openTeamModal()">+ Add Member</button>
+                <button class="btn btn-primary" onclick="openTenantModal()">+ Tenant</button>
                 <button class="btn btn-danger" onclick="handleLogout()">🚪</button>
             </div>
         </nav>
         
-        <!-- TABS -->
-        <div class="tabs" id="main-tabs">
-            <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
-            <button class="tab-btn" data-tab="kanban" onclick="switchTab('kanban')">📋 Kanban</button>
-            <button class="tab-btn" data-tab="leads" onclick="switchTab('leads')">👥 Leads</button>
-            <button class="tab-btn admin-only" data-tab="team" onclick="switchTab('team')">👥 Team</button>
-            <button class="tab-btn admin-only" data-tab="tenants" onclick="switchTab('tenants')">🏢 Tenants</button>
-            <button class="tab-btn admin-only" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('kanban')">📋 Kanban</button>
+            <button class="tab-btn" onclick="switchTab('leads')">👥 Leads</button>
+            <button class="tab-btn" onclick="switchTab('team')">👥 Team</button>
+            <button class="tab-btn" onclick="switchTab('tenants')">🏢 Tenants</button>
         </div>
         
-        <!-- TAB: DASHBOARD -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="metrics-bar" id="metrics-bar"></div>
-        </div>
-        
-        <!-- TAB: KANBAN -->
-        <div id="tab-kanban" class="tab-content">
-            <div class="kanban-board" id="kanban-board"></div>
-        </div>
-        
-        <!-- TAB: LEADS -->
-        <div id="tab-leads" class="tab-content">
-            <div class="table-container" id="leads-table-container"></div>
-        </div>
-        
-        <!-- TAB: TEAM -->
-        <div id="tab-team" class="tab-content">
-            <div class="team-container" id="team-container"></div>
-        </div>
-        
-        <!-- TAB: TENANTS -->
-        <div id="tab-tenants" class="tab-content">
-            <div class="table-container" id="tenants-container"></div>
-        </div>
-        
-        <!-- TAB: SETTINGS -->
-        <div id="tab-settings" class="tab-content">
-            <div class="settings-container" id="settings-container"></div>
-        </div>
+        <div id="tab-dashboard" class="tab-content active"><div class="metrics-bar" id="metrics-bar"></div></div>
+        <div id="tab-kanban" class="tab-content"><div class="kanban-board" id="kanban-board"></div></div>
+        <div id="tab-leads" class="tab-content"><div class="table-container" id="leads-table"></div></div>
+        <div id="tab-team" class="tab-content"><div class="table-container" id="team-table"></div></div>
+        <div id="tab-tenants" class="tab-content"><div class="table-container" id="tenants-table"></div></div>
     </div>
 
-    <!-- ============ LEAD MODAL ============ -->
     <div class="modal-overlay" id="lead-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">🌿 Add New Lead</span>
-                <button class="modal-close" onclick="closeLeadModal()">×</button>
-            </div>
-            <div class="form-group">
-                <label>Full Name <span class="required">*</span></label>
-                <input type="text" id="lead-name" placeholder="Customer full name">
-            </div>
-            <div class="form-group">
-                <label>Phone Number <span class="required">*</span></label>
-                <input type="tel" id="lead-phone" placeholder="10-digit mobile number">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="lead-email" placeholder="Email (optional)">
-                </div>
-                <div class="form-group">
-                    <label>City</label>
-                    <input type="text" id="lead-city" placeholder="City">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Product</label>
-                    <select id="lead-product">
-                        <option value="">Select product</option>
-                        <option>Chyawanprash</option>
-                        <option>Ashwagandha</option>
-                        <option>Triphala</option>
-                        <option>Giloy Juice</option>
-                        <option>Brahmi</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Source</label>
-                    <select id="lead-source">
-                        <option value="">Select source</option>
-                        <option>Facebook</option>
-                        <option>Instagram</option>
-                        <option>Google Ads</option>
-                        <option>Website</option>
-                        <option>WhatsApp</option>
-                        <option>Reference</option>
-                        <option>Walk-in</option>
-                        <option>Other</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Priority</label>
-                    <select id="lead-priority">
-                        <option>Normal</option>
-                        <option>Hot</option>
-                        <option>Warm</option>
-                        <option>Cold</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Assign To</label>
-                    <select id="lead-assigned-to">
-                        <option value="">Unassigned</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea id="lead-notes" rows="3" placeholder="Additional notes..."></textarea>
-            </div>
+            <h2>🌿 Add Lead</h2>
+            <div class="form-group"><label>Name *</label><input type="text" id="lead-name"></div>
+            <div class="form-group"><label>Phone *</label><input type="tel" id="lead-phone"></div>
+            <div class="form-group"><label>City</label><input type="text" id="lead-city"></div>
+            <div class="form-group"><label>Product</label><select id="lead-product"><option>Chyawanprash</option><option>Ashwagandha</option><option>Triphala</option><option>Giloy Juice</option><option>Brahmi</option><option>Other</option></select></div>
+            <div class="form-group"><label>Assign To</label><select id="lead-assign"></select></div>
             <div class="modal-actions">
-                <button style="background:#f8f9fa;color:#495057;" onclick="closeLeadModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveLead()">💾 Save Lead</button>
+                <button style="background:#f8f9fa;" onclick="closeLeadModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveLead()">💾 Save</button>
             </div>
         </div>
     </div>
 
-    <!-- ============ TEAM MEMBER MODAL ============ -->
     <div class="modal-overlay" id="team-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">👥 Add Team Member</span>
-                <button class="modal-close" onclick="closeTeamModal()">×</button>
-            </div>
-            <div class="form-group">
-                <label>Full Name <span class="required">*</span></label>
-                <input type="text" id="team-name" placeholder="Member name">
-            </div>
-            <div class="form-group">
-                <label>Email <span class="required">*</span></label>
-                <input type="email" id="team-email" placeholder="Email address">
-            </div>
-            <div class="form-group">
-                <label>Password <span class="required">*</span></label>
-                <input type="password" id="team-password" placeholder="Temporary password">
-            </div>
-            <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" id="team-phone" placeholder="Phone number">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Role</label>
-                    <select id="team-role">
-                        <option value="agent">Agent</option>
-                        <option value="team_lead">Team Lead</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Team</label>
-                    <select id="team-group">
-                        <option value="North">North</option>
-                        <option value="South">South</option>
-                        <option value="East">East</option>
-                        <option value="West">West</option>
-                        <option value="All">All</option>
-                    </select>
-                </div>
-            </div>
+            <h2>👥 Add Team Member</h2>
+            <div class="form-group"><label>Name *</label><input type="text" id="team-name"></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="team-email"></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="team-password"></div>
+            <div class="form-group"><label>Role</label><select id="team-role"><option value="agent">Agent</option><option value="team_lead">Team Lead</option><option value="admin">Admin</option></select></div>
+            <div class="form-group"><label>Team</label><select id="team-group"><option>North</option><option>South</option><option>East</option><option>West</option><option>All</option></select></div>
             <div class="modal-actions">
-                <button style="background:#f8f9fa;color:#495057;" onclick="closeTeamModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveTeamMember()">💾 Add Member</button>
+                <button style="background:#f8f9fa;" onclick="closeTeamModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveTeamMember()">💾 Add</button>
             </div>
         </div>
     </div>
 
-    <!-- ============ TENANT MODAL ============ -->
     <div class="modal-overlay" id="tenant-modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title">🏢 Create Tenant</span>
-                <button class="modal-close" onclick="closeTenantModal()">×</button>
-            </div>
-            <div class="form-group">
-                <label>Tenant Name <span class="required">*</span></label>
-                <input type="text" id="tenant-name" placeholder="Company name">
-            </div>
-            <div class="form-group">
-                <label>Plan</label>
-                <select id="tenant-plan">
-                    <option value="Free">Free</option>
-                    <option value="Basic">Basic</option>
-                    <option value="Premium">Premium</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Admin Email <span class="required">*</span></label>
-                <input type="email" id="tenant-admin-email" placeholder="Tenant admin email">
-            </div>
-            <div class="form-group">
-                <label>Admin Password <span class="required">*</span></label>
-                <input type="password" id="tenant-admin-password" placeholder="Password">
-            </div>
+            <h2>🏢 Create Tenant</h2>
+            <div class="form-group"><label>Tenant Name *</label><input type="text" id="tenant-name"></div>
+            <div class="form-group"><label>Admin Email *</label><input type="email" id="tenant-email"></div>
+            <div class="form-group"><label>Admin Password *</label><input type="password" id="tenant-password"></div>
             <div class="modal-actions">
-                <button style="background:#f8f9fa;color:#495057;" onclick="closeTenantModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveTenant()">💾 Create Tenant</button>
+                <button style="background:#f8f9fa;" onclick="closeTenantModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveTenant()">💾 Create</button>
             </div>
         </div>
     </div>
 
-    <!-- ============ TOAST CONTAINER ============ -->
     <div id="toast-container"></div>
 
-    <!-- JavaScript -->
-    <script src="app.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
+            authDomain: "avatar-wa-dual-crm.firebaseapp.com",
+            projectId: "avatar-wa-dual-crm",
+            storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
+            messagingSenderId: "946959261009",
+            appId: "1:946959261009:web:3ae08845917ac8cff8c770"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        const STATUSES = ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'];
+        const STATUS_COLORS = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
+        
+        let currentUser = null;
+        let currentProfile = null;
+        let tenantId = null;
+        let allLeads = [];
+        let allMembers = [];
+        let allTenants = [];
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                await loadProfile();
+                await loadAll();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+            }
+        });
+        
+        async function loadProfile() {
+            const doc = await db.collection('users').doc(currentUser.uid).get();
+            if (doc.exists) {
+                currentProfile = { id: doc.id, ...doc.data() };
+                tenantId = currentProfile.tenantId || null;
+            } else {
+                currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true };
+                await db.collection('users').doc(currentUser.uid).set(currentProfile);
+            }
+        }
+        
+        async function loadAll() {
+            await loadLeads();
+            await loadMembers();
+            await loadTenants();
+            renderMetrics();
+            renderKanban();
+            renderLeadsTable();
+            renderTeamTable();
+            renderTenantsTable();
+            populateAgentDropdown();
+        }
+        
+        async function loadLeads() {
+            let q = db.collection('leads').orderBy('createdAt', 'desc').limit(200);
+            if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+            const snap = await q.get();
+            allLeads = [];
+            snap.forEach(d => allLeads.push({ id: d.id, ...d.data() }));
+        }
+        
+        async function loadMembers() {
+            let q = db.collection('users');
+            if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+            const snap = await q.get();
+            allMembers = [];
+            snap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
+        }
+        
+        async function loadTenants() {
+            const snap = await db.collection('tenants').get();
+            allTenants = [];
+            snap.forEach(d => allTenants.push({ id: d.id, ...d.data() }));
+        }
+        
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const err = document.getElementById('login-error');
+            err.style.display = 'none';
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch(e) {
+                err.textContent = 'Login failed: ' + e.message;
+                err.style.display = 'block';
+            }
+        }
+        
+        async function handleLogout() { await auth.signOut(); }
+        
+        function renderMetrics() {
+            const total = allLeads.length;
+            const counts = {};
+            STATUSES.forEach(s => counts[s] = allLeads.filter(l => l.status === s).length);
+            const conv = total > 0 ? ((counts['Closed']/total)*100).toFixed(1) : 0;
+            
+            const metrics = [
+                ['📊','Total',total],['🆕','New',counts['New']],['📞','Contacted',counts['Contacted']],
+                ['⏰','Follow-up',counts['Follow-up']],['💚','Interested',counts['Interested']],
+                ['✅','Closed',counts['Closed']],['👥','Team',allMembers.length],['🎯','Conv',conv+'%']
+            ];
+            
+            document.getElementById('metrics-bar').innerHTML = metrics.map(([icon,label,val]) => `
+                <div class="metric-card">
+                    <div>${icon}</div>
+                    <div class="metric-value">${val}</div>
+                    <div class="metric-label">${label}</div>
+                </div>
+            `).join('');
+        }
+        
+        function renderKanban() {
+            const board = document.getElementById('kanban-board');
+            board.innerHTML = '';
+            STATUSES.forEach(status => {
+                const leads = allLeads.filter(l => l.status === status);
+                const col = document.createElement('div');
+                col.className = 'kanban-column';
+                col.style.background = STATUS_COLORS[status];
+                col.innerHTML = `
+                    <div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
+                    <div class="kanban-cards" data-status="${status}">
+                        ${leads.map(l => `
+                            <div class="lead-card" draggable="true" data-id="${l.id}">
+                                <h4>${l.name}</h4>
+                                <p>📞 ${l.phone}</p>
+                                ${l.assignedToName ? `<p>👤 ${l.assignedToName}</p>` : ''}
+                                <div class="lead-card-actions">
+                                    <button class="btn-call" onclick="callLead('${l.phone}')">📞</button>
+                                    <button class="btn-wa" onclick="waLead('${l.phone}')">💬</button>
+                                    <button class="btn-move" onclick="moveLead('${l.id}','${l.status}')">➡️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                board.appendChild(col);
+            });
+            
+            document.querySelectorAll('.lead-card').forEach(c => {
+                c.addEventListener('dragstart', e => e.dataTransfer.setData('id', c.dataset.id));
+            });
+            document.querySelectorAll('.kanban-cards').forEach(z => {
+                z.addEventListener('dragover', e => e.preventDefault());
+                z.addEventListener('drop', async e => {
+                    e.preventDefault();
+                    const id = e.dataTransfer.getData('id');
+                    const status = z.dataset.status;
+                    await db.collection('leads').doc(id).update({
+                        status, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showToast('✅ Moved to ' + status);
+                    loadAll();
+                });
+            });
+        }
+        
+        function renderLeadsTable() {
+            const c = document.getElementById('leads-table');
+            if (allLeads.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">📭 No leads</div>'; return; }
+            c.innerHTML = `
+                <table>
+                    <thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
+                    <tbody>${allLeads.map(l => `
+                        <tr>
+                            <td><strong>${l.name}</strong></td>
+                            <td>${l.phone}</td>
+                            <td>${l.product || '-'}</td>
+                            <td>${l.status}</td>
+                            <td>${l.assignedToName || 'Unassigned'}</td>
+                            <td>
+                                <button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer;" onclick="callLead('${l.phone}')">📞</button>
+                                <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer;" onclick="waLead('${l.phone}')">💬</button>
+                            </td>
+                        </tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+        
+        function renderTeamTable() {
+            const c = document.getElementById('team-table');
+            if (allMembers.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">👥 No team members</div>'; return; }
+            c.innerHTML = `
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th></tr></thead>
+                    <tbody>${allMembers.map(m => `
+                        <tr><td><strong>${m.name || 'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team || 'All'}</td></tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+        
+        function renderTenantsTable() {
+            const c = document.getElementById('tenants-table');
+            if (allTenants.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">🏢 No tenants</div>'; return; }
+            c.innerHTML = `
+                <table>
+                    <thead><tr><th>Name</th><th>Plan</th><th>Status</th></tr></thead>
+                    <tbody>${allTenants.map(t => `
+                        <tr><td><strong>${t.name}</strong></td><td>${t.plan || 'Free'}</td><td>${t.status || 'Active'}</td></tr>
+                    `).join('')}</tbody>
+                </table>
+            `;
+        }
+        
+        function populateAgentDropdown() {
+            const select = document.getElementById('lead-assign');
+            const agents = allMembers.filter(m => m.role !== 'admin');
+            select.innerHTML = '<option value="">Unassigned</option>' + agents.map(a => `<option value="${a.id}">${a.name || a.email}</option>`).join('');
+        }
+        
+        function openLeadModal() { document.getElementById('lead-modal').classList.add('active'); populateAgentDropdown(); }
+        function closeLeadModal() { document.getElementById('lead-modal').classList.remove('active'); }
+        
+        async function saveLead() {
+            const name = document.getElementById('lead-name').value.trim();
+            const phone = document.getElementById('lead-phone').value.trim();
+            const assignId = document.getElementById('lead-assign').value;
+            if (!name || !phone) { showToast('Name and phone required', 'error'); return; }
+            
+            const member = allMembers.find(m => m.id === assignId);
+            
+            await db.collection('leads').add({
+                name, phone,
+                city: document.getElementById('lead-city').value.trim(),
+                product: document.getElementById('lead-product').value,
+                status: 'New',
+                tenantId,
+                assignedTo: assignId || null,
+                assignedToName: member ? member.name : null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('✅ Lead added');
+            closeLeadModal();
+            loadAll();
+        }
+        
+        function openTeamModal() { document.getElementById('team-modal').classList.add('active'); }
+        function closeTeamModal() { document.getElementById('team-modal').classList.remove('active'); }
+        
+        async function saveTeamMember() {
+            const name = document.getElementById('team-name').value.trim();
+            const email = document.getElementById('team-email').value.trim();
+            const password = document.getElementById('team-password').value;
+            if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
+            
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                await db.collection('users').doc(cred.user.uid).set({
+                    name, email,
+                    role: document.getElementById('team-role').value,
+                    team: document.getElementById('team-group').value,
+                    tenantId,
+                    isActive: true,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Member added');
+                closeTeamModal();
+                loadAll();
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+        
+        function openTenantModal() { document.getElementById('tenant-modal').classList.add('active'); }
+        function closeTenantModal() { document.getElementById('tenant-modal').classList.remove('active'); }
+        
+        async function saveTenant() {
+            const name = document.getElementById('tenant-name').value.trim();
+            const email = document.getElementById('tenant-email').value.trim();
+            const password = document.getElementById('tenant-password').value;
+            if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
+            
+            try {
+                const tenantRef = await db.collection('tenants').add({
+                    name, plan: 'Free', status: 'Active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                await db.collection('users').doc(cred.user.uid).set({
+                    name: name + ' Admin', email, role: 'admin', tenantId: tenantRef.id,
+                    isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Tenant created');
+                closeTenantModal();
+                loadAll();
+            } catch(e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+        
+        async function moveLead(id, current) {
+            const idx = STATUSES.indexOf(current);
+            const next = STATUSES[(idx + 1) % STATUSES.length];
+            await db.collection('leads').doc(id).update({
+                status: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast('✅ Moved to ' + next);
+            loadAll();
+        }
+        
+        function callLead(phone) { if(phone) window.location.href = 'tel:+91' + phone; }
+        function waLead(phone) { if(phone) window.open('https://wa.me/91' + phone, '_blank'); }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab)));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+        }
+        
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + (type === 'error' ? 'toast-error' : 'toast-success');
+            toast.textContent = msg;
+            toast.onclick = () => toast.remove();
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+        });
+    </script>
 </body>
 </html>
