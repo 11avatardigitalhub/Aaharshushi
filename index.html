@@ -7,68 +7,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <style>
-        :root{--p:#2a5c3e;--pl:#3d7a54;--pb:#e3f0e5;--w:#fff;--bg:#f0f4f1;--t:#1e3a2f;--m:#6c757d;--b:#dee2e6;--d:#dc3545;--db:#f8d7da;--s:#28a745;--sb:#d4edda;--warn:#ffc107;--wb:#fff3cd;--info:#17a2b8;--ib:#d1ecf1;--r:12px;--sh:0 2px 10px rgba(0,0,0,.08)}
-        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-        body{background:var(--bg);color:var(--t);min-height:100vh}
-        ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--pl);border-radius:3px}
-        @keyframes fi{from{opacity:0}to{opacity:1}}@keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes sr{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-        #ls{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#f0f4f1,#e3f0e5)}
-        .lb{background:var(--w);border-radius:20px;padding:40px 30px;width:100%;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,.1);text-align:center;animation:su .5s}
-        .lb h1{font-size:1.5rem;color:var(--p);margin:10px 0}
-        .lb input{width:100%;padding:13px;border:1px solid var(--b);border-radius:10px;font-size:.9rem;margin-bottom:12px}
-        .lb button{width:100%;padding:14px;background:var(--p);color:#fff;border:none;border-radius:25px;font-size:1rem;font-weight:700;cursor:pointer}
-        #le{background:var(--db);color:#721c24;padding:10px;border-radius:8px;font-size:.8rem;margin-bottom:12px;display:none}
-        #db{display:none;padding:20px;max-width:1500px;margin:0 auto}
-        .nb{background:#fff;padding:15px 20px;border-radius:15px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--sh);margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .nb-brand{font-weight:700;font-size:1.2rem;color:var(--p)}
-        .nb-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .btn{padding:10px 16px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-size:.8rem;transition:.3s;font-family:inherit}
-        .btn:hover{transform:translateY(-2px);box-shadow:var(--sh)}
-        .bp{background:var(--p);color:#fff}.bd{background:var(--db);color:#721c24}
-        .tabs{display:flex;gap:5px;background:#fff;padding:8px;border-radius:12px;box-shadow:var(--sh);margin-bottom:15px;overflow-x:auto}
-        .tb{padding:10px 16px;border:none;background:transparent;border-radius:20px;cursor:pointer;font-weight:600;font-size:.8rem;color:var(--m);white-space:nowrap;font-family:inherit}
-        .tb.active{background:var(--p);color:#fff}
-        .tc{display:none;animation:fi .3s}.tc.active{display:block}
-        .mb{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px}
-        .mc{background:#fff;padding:15px;border-radius:12px;box-shadow:var(--sh);text-align:center;cursor:pointer;transition:.3s}
-        .mc:hover{transform:translateY(-3px)}
-        .mv{font-size:1.4rem;font-weight:700;color:var(--p)}
-        .ml{font-size:.65rem;color:var(--m);font-weight:600;text-transform:uppercase}
-        .kb{display:flex;gap:12px;overflow-x:auto;padding:10px 0}
-        .kc{background:#e9ecef;border-radius:12px;min-width:230px;width:250px;padding:12px;flex-shrink:0;max-height:60vh;display:flex;flex-direction:column}
-        .kch{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-radius:8px;margin-bottom:10px;font-weight:700;font-size:.85rem}
-        .kcnt{background:var(--p);color:#fff;padding:2px 8px;border-radius:12px;font-size:.7rem}
-        .kcs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-        .lc{background:#fff;border-radius:10px;padding:12px;box-shadow:0 2px 5px rgba(0,0,0,.06);cursor:grab;transition:.3s}
-        .lc:hover{box-shadow:var(--sh);transform:translateY(-2px)}
-        .lc h4{font-size:.85rem}.lc p{font-size:.72rem;color:var(--m)}
-        .lca{display:flex;gap:4px;margin-top:8px}
-        .lca button{flex:1;padding:5px;border:none;border-radius:12px;cursor:pointer;font-size:.65rem;font-weight:600}
-        .bc{background:#e3f0e5;color:#1e7e34}.bw{background:#d4edda;color:#155724}.bm{background:var(--ib);color:#0c5460}
-        .tbl{background:#fff;border-radius:12px;box-shadow:var(--sh);overflow-x:auto;padding:15px}
-        table{width:100%;border-collapse:collapse;font-size:.78rem}
-        th{background:#f8f9fa;color:var(--p);padding:10px;text-align:left;border-bottom:2px solid var(--b)}
-        td{padding:8px 10px;border-bottom:1px solid #f0f0f0}
-        tr:hover{background:#f8f9fa}
-        .mo{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
-        .mo.active{display:flex;animation:fi .3s}
-        .mc2{background:#fff;border-radius:20px;padding:25px;width:100%;max-width:550px;max-height:85vh;overflow-y:auto;animation:su .4s}
-        .mc2 h2{color:var(--p);margin-bottom:20px;font-size:1.1rem}
-        .fg{margin-bottom:12px}
-        .fg label{display:block;font-weight:600;font-size:.75rem;margin-bottom:4px}
-        .fg input,.fg select,.fg textarea{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:8px;font-size:.83rem;font-family:inherit}
-        .fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .ma{display:flex;gap:10px;margin-top:15px}
-        .ma button{flex:1;padding:11px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-family:inherit}
-        #tc2{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
-        .toast{padding:12px 18px;border-radius:10px;color:#fff;font-weight:600;font-size:.8rem;cursor:pointer;animation:sr .3s}
-        .ts{background:var(--p)}.te{background:var(--d)}
-        @media(max-width:600px){.mb{grid-template-columns:repeat(2,1fr)}.kc{min-width:200px;width:220px}.fr{grid-template-columns:1fr}}
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="ls">
     <div class="lb">
         <div style="font-size:3rem">🌿</div>
@@ -82,6 +25,7 @@
     </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="db">
     <nav class="nb">
         <div class="nb-brand">🌿 Aahar Shudhi <span id="tenant-badge" style="font-size:.7rem;color:var(--m)"></span></div>
@@ -94,6 +38,7 @@
             <button class="btn bd" onclick="logout()">🚪</button>
         </div>
     </nav>
+    
     <div class="tabs">
         <button class="tb active" data-t="dashboard" onclick="st('dashboard')">📊 Dashboard</button>
         <button class="tb" data-t="kanban" onclick="st('kanban')">📋 Kanban</button>
@@ -104,7 +49,11 @@
         <button class="tb" data-t="tenants" onclick="st('tenants')">🏢 Tenants</button>
         <button class="tb" data-t="settings" onclick="st('settings')">⚙️ Settings</button>
     </div>
-    <div id="t-dashboard" class="tc active"><div class="mb" id="metrics"></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px" id="dash-extra"></div></div>
+    
+    <div id="t-dashboard" class="tc active">
+        <div class="mb" id="metrics"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px" id="dash-extra"></div>
+    </div>
     <div id="t-kanban" class="tc"><div class="kb" id="kanban"></div></div>
     <div id="t-leads" class="tc"><div class="tbl" id="leads-tbl"></div></div>
     <div id="t-orders" class="tc"><div class="tbl" id="orders-tbl"></div></div>
@@ -114,6 +63,7 @@
     <div id="t-settings" class="tc"><div class="tbl" id="settings-body"></div></div>
 </div>
 
+<!-- LEAD MODAL -->
 <div class="mo" id="lead-modal"><div class="mc2"><h2>🌿 Add Lead</h2>
 <div class="fg"><label>Name *</label><input id="f-lead-name"></div>
 <div class="fg"><label>Phone *</label><input id="f-lead-phone" maxlength="10"></div>
@@ -124,6 +74,7 @@
 <div class="ma"><button style="background:#f8f9fa" onclick="closeModal('lead-modal')">Cancel</button><button style="background:var(--p);color:#fff" onclick="saveLead()">💾 Save</button></div>
 </div></div>
 
+<!-- ORDER MODAL -->
 <div class="mo" id="order-modal"><div class="mc2"><h2>📦 Create Order</h2>
 <div class="fg"><label>Lead *</label><select id="f-order-lead"></select></div>
 <div class="fr"><div class="fg"><label>Product *</label><select id="f-order-product"></select></div><div class="fg"><label>Qty *</label><input type="number" id="f-order-qty" value="1"></div></div>
@@ -137,6 +88,7 @@
 <div class="ma"><button style="background:#f8f9fa" onclick="closeModal('order-modal')">Cancel</button><button style="background:var(--p);color:#fff" onclick="saveOrder()">💾 Create</button></div>
 </div></div>
 
+<!-- PRODUCT MODAL -->
 <div class="mo" id="product-modal"><div class="mc2"><h2>🌿 Add Product</h2>
 <div class="fg"><label>Name *</label><input id="f-prod-name"></div>
 <div class="fr"><div class="fg"><label>Category</label><input id="f-prod-cat"></div><div class="fg"><label>Price</label><input type="number" id="f-prod-price"></div></div>
@@ -144,6 +96,7 @@
 <div class="ma"><button style="background:#f8f9fa" onclick="closeModal('product-modal')">Cancel</button><button style="background:var(--p);color:#fff" onclick="saveProduct()">💾 Save</button></div>
 </div></div>
 
+<!-- TEAM MODAL -->
 <div class="mo" id="team-modal"><div class="mc2"><h2>👥 Add Member</h2>
 <div class="fg"><label>Name *</label><input id="f-team-name"></div>
 <div class="fg"><label>Email *</label><input type="email" id="f-team-email"></div>
@@ -152,6 +105,7 @@
 <div class="ma"><button style="background:#f8f9fa" onclick="closeModal('team-modal')">Cancel</button><button style="background:var(--p);color:#fff" onclick="saveMember()">💾 Add</button></div>
 </div></div>
 
+<!-- TENANT MODAL -->
 <div class="mo" id="tenant-modal"><div class="mc2"><h2>🏢 Create Tenant</h2>
 <div class="fg"><label>Name *</label><input id="f-tenant-name"></div>
 <div class="fg"><label>Admin Email *</label><input type="email" id="f-tenant-email"></div>
@@ -161,82 +115,6 @@
 
 <div id="tc2"></div>
 
-<script>
-const fc={apiKey:"AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",authDomain:"avatar-wa-dual-crm.firebaseapp.com",projectId:"avatar-wa-dual-crm",storageBucket:"avatar-wa-dual-crm.firebasestorage.app",messagingSenderId:"946959261009",appId:"1:946959261009:web:3ae08845917ac8cff8c770"};
-firebase.initializeApp(fc);const db=firebase.firestore();const auth=firebase.auth();
-let cu=null,cp=null,tid=null,allL=[],allM=[],allT=[],allO=[],allP=[],allS={st:['New','Contacted','Follow-up','Interested','Closed'],so:['Facebook','Instagram','Website','Reference','Other'],pr:['Normal','Hot','Warm','Cold'],co:['Delhivery','Blue Dart','DTDC','India Post','Ekart']};
-const OS=['Order Placed','Confirmed','Packed','Dispatched','In Transit','Out for Delivery','Delivered','RTO'];
-const SCOL={'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
-
-auth.onAuthStateChanged(async u=>{if(u){cu=u;document.getElementById('ls').style.display='none';document.getElementById('db').style.display='block';await loadProfile();await loadSettings();await loadAll();}else{document.getElementById('ls').style.display='flex';document.getElementById('db').style.display='none';}});
-
-async function loadProfile(){try{const d=await db.collection('users').doc(cu.uid).get();if(d.exists){cp={id:d.id,...d.data()};tid=cp.tenantId||null;}else{cp={id:cu.uid,email:cu.email,name:'Super Admin',role:'admin',isSuperAdmin:true};await db.collection('users').doc(cu.uid).set(cp);}document.getElementById('tenant-badge').textContent=cp.isSuperAdmin?'| Super Admin':(tid?'| Tenant':'| No Tenant');}catch(e){}}
-async function loadSettings(){try{const d=await db.collection('settings').doc('platform').get();if(d.exists)allS={...allS,...d.data()};}catch(e){}}
-
-async function loadAll(){await Promise.all([loadL(),loadM(),loadT(),loadO(),loadP()]);renderAll();}
-async function loadL(){let q=db.collection('leads').orderBy('createdAt','desc').limit(500);if(tid&&!cp.isSuperAdmin)q=q.where('tenantId','==',tid);const s=await q.get();allL=[];s.forEach(d=>allL.push({id:d.id,...d.data()}));}
-async function loadM(){let q=db.collection('users');if(tid&&!cp.isSuperAdmin)q=q.where('tenantId','==',tid);const s=await q.get();allM=[];s.forEach(d=>allM.push({id:d.id,...d.data()}));}
-async function loadT(){const s=await db.collection('tenants').get();allT=[];s.forEach(d=>allT.push({id:d.id,...d.data()}));}
-async function loadO(){let q=db.collection('orders').orderBy('createdAt','desc').limit(500);if(tid&&!cp.isSuperAdmin)q=q.where('tenantId','==',tid);const s=await q.get();allO=[];s.forEach(d=>allO.push({id:d.id,...d.data()}));}
-async function loadP(){let q=db.collection('products');if(tid&&!cp.isSuperAdmin)q=q.where('tenantId','==',tid);const s=await q.get();allP=[];s.forEach(d=>allP.push({id:d.id,...d.data()}));if(allP.length===0){const def=[{name:'Chyawanprash',category:'Immunity',price:599},{name:'Ashwagandha',category:'Wellness',price:499},{name:'Triphala',category:'Digestion',price:299}];for(const p of def)await db.collection('products').add({...p,tenantId:tid||null,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await loadP();}}
-
-function renderAll(){renderMetrics();renderKanban();renderLeads();renderOrders();renderProducts();renderTeam();renderTenants();renderSettings();populateDD();}
-
-function renderMetrics(){const tot=allL.length;const c={};allS.st.forEach(s=>c[s]=allL.filter(l=>l.status===s).length);const conv=tot>0?((c['Closed']/tot)*100).toFixed(1):0;const del=allO.filter(o=>o.status==='Delivered').length;const rto=allO.filter(o=>o.status==='RTO').length;const rev=allO.reduce((s,o)=>s+(parseFloat(o.amount)||0),0);
-const m=[['📊','Leads',tot],['🆕','New',c['New']||0],['📞','Contacted',c['Contacted']||0],['⏰','Follow-up',c['Follow-up']||0],['💚','Interested',c['Interested']||0],['✅','Closed',c['Closed']||0],['📦','Orders',allO.length],['💰','Revenue','₹'+fmt(rev)],['🚚','Delivered',del],['↩️','RTO',rto],['🌿','Products',allP.length],['👥','Team',allM.length],['🏢','Tenants',allT.length],['🎯','Conv%',conv+'%']];
-document.getElementById('metrics').innerHTML=m.map(([i,l,v])=>`<div class="mc"><div style="font-size:1.3rem">${i}</div><div class="mv">${v}</div><div class="ml">${l}</div></div>`).join('');
-document.getElementById('dash-extra').innerHTML=`<div class="tbl"><h3>🆕 Recent Leads</h3>${allL.slice(0,5).map(l=>`<p>${l.name} - ${l.phone} <span style="background:${SCOL[l.status]};padding:2px 8px;border-radius:10px;font-size:.65rem">${l.status}</span></p>`).join('')||'<p>No leads</p>'}</div><div class="tbl"><h3>📦 Recent Orders</h3>${allO.slice(0,5).map(o=>`<p>${o.orderId||o.id.substring(0,8)} - ${o.leadName} - ₹${o.amount}</p>`).join('')||'<p>No orders</p>'}</div>`;}
-
-function renderKanban(){const b=document.getElementById('kanban');b.innerHTML='';allS.st.forEach(st=>{const ls=allL.filter(l=>l.status===st);const col=document.createElement('div');col.className='kc';col.style.background=SCOL[st]||'#e9ecef';col.innerHTML=`<div class="kch"><span>${st}</span><span class="kcnt">${ls.length}</span></div><div class="kcs" data-status="${st}">${ls.map(l=>`<div class="lc" draggable="true" data-id="${l.id}"><h4>${l.name}</h4><p>📞 ${l.phone}</p>${l.assignedToName?`<p>👤 ${l.assignedToName}</p>`:''}<div class="lca"><button class="bc" onclick="event.stopPropagation();callLead('${l.phone}')">📞</button><button class="bw" onclick="event.stopPropagation();waLead('${l.phone}')">💬</button><button class="bm" onclick="event.stopPropagation();moveLead('${l.id}','${l.status}')">➡️</button></div></div>`).join('')}</div>`;b.appendChild(col);});
-document.querySelectorAll('.lc').forEach(c=>c.addEventListener('dragstart',e=>e.dataTransfer.setData('id',c.dataset.id)));
-document.querySelectorAll('.kcs').forEach(z=>{z.addEventListener('dragover',e=>e.preventDefault());z.addEventListener('drop',async e=>{e.preventDefault();const id=e.dataTransfer.getData('id');const st=z.dataset.status;await db.collection('leads').doc(id).update({status:st,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Moved to '+st);loadAll();});});}
-
-function renderLeads(){const c=document.getElementById('leads-tbl');if(!allL.length){c.innerHTML='<div style="padding:40px;text-align:center;color:var(--m)">📭 No leads</div>';return;}c.innerHTML=`<table><thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Priority</th><th>Assigned</th><th>Actions</th></tr></thead><tbody>${allL.map(l=>`<tr><td><strong>${l.name}</strong></td><td>${l.phone}</td><td>${l.product||'-'}</td><td><span style="padding:3px 10px;border-radius:12px;background:${SCOL[l.status]};font-size:.7rem">${l.status}</span></td><td>${l.priority||'Normal'}</td><td>${l.assignedToName||'-'}</td><td><button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="callLead('${l.phone}')">📞</button> <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="waLead('${l.phone}')">💬</button> <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="delLead('${l.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;}
-
-function renderOrders(){const c=document.getElementById('orders-tbl');if(!allO.length){c.innerHTML='<div style="padding:40px;text-align:center;color:var(--m)">📦 No orders</div>';return;}const cols={'Order Placed':'#fff3cd','Confirmed':'#d1ecf1','Packed':'#e7d9ff','Dispatched':'#fff3cd','In Transit':'#d1ecf1','Out for Delivery':'#cce5ff','Delivered':'#d4edda','RTO':'#f8d7da'};c.innerHTML=`<table><thead><tr><th>Order ID</th><th>Lead</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Courier</th><th>AWB</th><th>Actions</th></tr></thead><tbody>${allO.map(o=>`<tr><td><strong>${o.orderId||o.id.substring(0,8)}</strong></td><td>${o.leadName||'-'}</td><td>${o.product}</td><td>${o.qty}</td><td>₹${o.amount}</td><td><span style="padding:3px 10px;border-radius:12px;background:${cols[o.status]||'#e9ecef'};font-size:.7rem">${o.status}</span></td><td>${o.courier||'-'}</td><td>${o.awb||'-'}</td><td><button style="background:var(--ib);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="advOrder('${o.id}','${o.status}')">➡️</button> <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="rtoOrder('${o.id}')">↩️</button></td></tr>`).join('')}</tbody></table>`;}
-
-function renderProducts(){const c=document.getElementById('products-tbl');c.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:10px"><h3>🌿 Products (${allP.length})</h3></div><table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead><tbody>${allP.map(p=>`<tr><td><strong>${p.name}</strong></td><td>${p.category||'-'}</td><td>₹${p.price||0}</td><td><button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="delProd('${p.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;}
-
-function renderTeam(){const c=document.getElementById('team-tbl');if(!allM.length){c.innerHTML='<div style="padding:40px;text-align:center;color:var(--m)">👥 No members</div>';return;}c.innerHTML=`<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Actions</th></tr></thead><tbody>${allM.map(m=>`<tr><td><strong>${m.name||'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team||'All'}</td><td><button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="delMember('${m.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;}
-
-function renderTenants(){const c=document.getElementById('tenants-tbl');if(!allT.length){c.innerHTML='<div style="padding:40px;text-align:center;color:var(--m)">🏢 No tenants</div>';return;}c.innerHTML=`<table><thead><tr><th>Name</th><th>Plan</th><th>Created</th></tr></thead><tbody>${allT.map(t=>`<tr><td><strong>${t.name}</strong></td><td>${t.plan||'Free'}</td><td>${t.createdAt?getTA(t.createdAt):'-'}</td></tr>`).join('')}</tbody></table>`;}
-
-function renderSettings(){const c=document.getElementById('settings-body');c.innerHTML=`<h3>⚙️ Platform Settings</h3><div class="fg"><label>Statuses (comma separated)</label><textarea id="s-st" rows="3">${allS.st.join(', ')}</textarea></div><div class="fg"><label>Sources</label><textarea id="s-so" rows="3">${allS.so.join(', ')}</textarea></div><div class="fg"><label>Priorities</label><textarea id="s-pr" rows="3">${allS.pr.join(', ')}</textarea></div><div class="fg"><label>Couriers</label><textarea id="s-co" rows="3">${allS.co.join(', ')}</textarea></div><button class="btn bp" onclick="saveSettings()">💾 Save Settings</button>`;}
-
-function populateDD(){document.getElementById('f-lead-product').innerHTML='<option value="">Select</option>'+allP.map(p=>`<option>${p.name}</option>`).join('');document.getElementById('f-lead-source').innerHTML='<option value="">Select</option>'+allS.so.map(s=>`<option>${s}</option>`).join('');document.getElementById('f-lead-priority').innerHTML='<option value="">Select</option>'+allS.pr.map(p=>`<option>${p}</option>`).join('');document.getElementById('f-lead-assign').innerHTML='<option value="">Unassigned</option>'+allM.filter(m=>m.role!=='admin').map(a=>`<option value="${a.id}">${a.name||a.email}</option>`).join('');document.getElementById('f-order-lead').innerHTML='<option value="">Select</option>'+allL.map(l=>`<option value="${l.id}">${l.name}-${l.phone}</option>`).join('');document.getElementById('f-order-product').innerHTML='<option value="">Select</option>'+allP.map(p=>`<option>${p.name}</option>`).join('');document.getElementById('f-order-courier').innerHTML='<option value="">Select</option>'+allS.co.map(c=>`<option>${c}</option>`).join('');}
-
-async function login(){const e=document.getElementById('le-mail').value.trim(),p=document.getElementById('le-pass').value,er=document.getElementById('le');er.style.display='none';if(!e||!p){er.textContent='Email and password required';er.style.display='block';return;}try{await auth.signInWithEmailAndPassword(e,p);}catch(x){er.textContent='Login failed: '+x.message;er.style.display='block';}}
-async function logout(){await auth.signOut();}
-
-function st(t){document.querySelectorAll('.tb').forEach(b=>b.classList.toggle('active',b.dataset.t===t));document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('active',c.id==='t-'+t));}
-function openModal(id){document.getElementById(id).classList.add('active');populateDD();}
-function closeModal(id){document.getElementById(id).classList.remove('active');}
-function toast(m,type='success'){const c=document.getElementById('tc2');const t=document.createElement('div');t.className='toast '+(type==='error'?'te':'ts');t.textContent=m;t.onclick=()=>t.remove();c.appendChild(t);setTimeout(()=>t.remove(),3000);}
-function getTA(ts){if(!ts)return'';const d=ts.toDate?ts.toDate():new Date(ts);const s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return'Just now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d';}
-function fmt(n){if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return(n/1000).toFixed(1)+'K';return n.toString();}
-function callLead(p){if(p)window.location.href='tel:+91'+p.replace(/[^0-9]/g,'');}
-function waLead(p){if(p)window.open('https://wa.me/91'+p.replace(/[^0-9]/g,''),'_blank');}
-
-async function saveLead(){const n=document.getElementById('f-lead-name').value.trim(),p=document.getElementById('f-lead-phone').value.trim();if(!n||!p){toast('Name and phone required','error');return;}const ai=document.getElementById('f-lead-assign').value,m=allM.find(x=>x.id===ai);await db.collection('leads').add({name:n,phone:p,email:document.getElementById('f-lead-email').value.trim(),city:document.getElementById('f-lead-city').value.trim(),product:document.getElementById('f-lead-product').value,source:document.getElementById('f-lead-source').value,priority:document.getElementById('f-lead-priority').value,notes:document.getElementById('f-lead-notes').value.trim(),status:'New',tenantId:tid,assignedTo:ai||null,assignedToName:m?(m.name||m.email):null,createdBy:cu.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Lead added');closeModal('lead-modal');loadAll();}
-async function delLead(id){if(!confirm('Delete?'))return;await db.collection('leads').doc(id).delete();toast('✅ Deleted');loadAll();}
-async function moveLead(id,cur){const i=allS.st.indexOf(cur),n=allS.st[(i+1)%allS.st.length];await db.collection('leads').doc(id).update({status:n,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ '+n);loadAll();}
-
-async function saveOrder(){const li=document.getElementById('f-order-lead').value,pr=document.getElementById('f-order-product').value,q=document.getElementById('f-order-qty').value,am=document.getElementById('f-order-amount').value,pm=document.getElementById('f-order-payment').value,a1=document.getElementById('f-order-a1').value.trim(),a2=document.getElementById('f-order-a2').value.trim(),ci=document.getElementById('f-order-city').value.trim(),stt=document.getElementById('f-order-state').value.trim(),pin=document.getElementById('f-order-pin').value.trim(),lm=document.getElementById('f-order-landmark').value.trim(),co=document.getElementById('f-order-courier').value,wh=document.getElementById('f-order-wh').value;if(!li||!pr||!q||!am||!a1||!ci||!stt||!pin){toast('All required fields','error');return;}const l=allL.find(x=>x.id===li),awb=co?co.substring(0,2).toUpperCase()+Date.now().toString().slice(-10):null;await db.collection('orders').add({orderId:'ORD-'+Date.now().toString().slice(-6),leadId:li,leadName:l?.name,leadPhone:l?.phone,product:pr,qty:parseInt(q),amount:parseFloat(am),paymentMethod:pm,address1:a1,address2:a2,city:ci,state:stt,pincode:pin,landmark:lm,courier:co,warehouse:wh,awb,status:'Order Placed',tenantId:tid,createdBy:cu.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),timeline:[{status:'Order Placed',at:new Date().toISOString()}]});if(li)await db.collection('leads').doc(li).update({status:'Interested',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Order created');closeModal('order-modal');loadAll();}
-async function advOrder(id,cur){const i=OS.indexOf(cur);if(i===-1||i===OS.length-1)return;const n=OS[i+1];await db.collection('orders').doc(id).update({status:n,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),timeline:firebase.firestore.FieldValue.arrayUnion({status:n,at:new Date().toISOString()})});toast('✅ '+n);loadAll();}
-async function rtoOrder(id){if(!confirm('Mark RTO?'))return;await db.collection('orders').doc(id).update({status:'RTO',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),timeline:firebase.firestore.FieldValue.arrayUnion({status:'RTO',at:new Date().toISOString()})});toast('↩️ RTO');loadAll();}
-
-async function saveProduct(){const n=document.getElementById('f-prod-name').value.trim();if(!n){toast('Name required','error');return;}await db.collection('products').add({name:n,category:document.getElementById('f-prod-cat').value.trim(),price:parseFloat(document.getElementById('f-prod-price').value)||0,description:document.getElementById('f-prod-desc').value.trim(),tenantId:tid||null,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Product added');closeModal('product-modal');loadAll();}
-async function delProd(id){if(!confirm('Delete?'))return;await db.collection('products').doc(id).delete();toast('✅ Deleted');loadAll();}
-
-async function saveMember(){const n=document.getElementById('f-team-name').value.trim(),e=document.getElementById('f-team-email').value.trim(),p=document.getElementById('f-team-pass').value;if(!n||!e||!p){toast('All fields required','error');return;}try{const c=await auth.createUserWithEmailAndPassword(e,p);await db.collection('users').doc(c.user.uid).set({name:n,email:e,role:document.getElementById('f-team-role').value,team:document.getElementById('f-team-group').value,tenantId:tid,isActive:true,createdBy:cu.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Member added');closeModal('team-modal');loadAll();}catch(x){toast('Error: '+x.message,'error');}}
-async function delMember(id){if(!confirm('Remove?'))return;await db.collection('users').doc(id).update({isActive:false});toast('✅ Deactivated');loadAll();}
-
-async function saveTenant(){const n=document.getElementById('f-tenant-name').value.trim(),e=document.getElementById('f-tenant-email').value.trim(),p=document.getElementById('f-tenant-pass').value;if(!n||!e||!p){toast('All fields required','error');return;}try{const tr=await db.collection('tenants').add({name:n,plan:'Free',status:'Active',createdBy:cu.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});const c=await auth.createUserWithEmailAndPassword(e,p);await db.collection('users').doc(c.user.uid).set({name:n+' Admin',email:e,role:'admin',tenantId:tr.id,isActive:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast('✅ Tenant created');closeModal('tenant-modal');loadAll();}catch(x){toast('Error: '+x.message,'error');}}
-
-async function saveSettings(){const st=document.getElementById('s-st').value.split(',').map(s=>s.trim()).filter(Boolean),so=document.getElementById('s-so').value.split(',').map(s=>s.trim()).filter(Boolean),pr=document.getElementById('s-pr').value.split(',').map(s=>s.trim()).filter(Boolean),co=document.getElementById('s-co').value.split(',').map(s=>s.trim()).filter(Boolean);await db.collection('settings').doc('platform').set({st,so,pr,co,updatedBy:cu.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});allS={st,so,pr,co};toast('✅ Settings saved');loadAll();}
-
-document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));
-console.log('✅ System Ready');
-</script>
+<script src="app.js"></script>
 </body>
 </html>
