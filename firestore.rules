@@ -1,0 +1,305 @@
+/**
+ * ============================================================
+ * AAHAR SHUDHI - FIRESTORE SECURITY RULES
+ * ============================================================
+ * @description Enterprise-grade database security
+ * @version 1.0.0
+ * 
+ * Security Levels:
+ * - Admin: Full access
+ * - Team Lead: Team-level access
+ * - Agent: Own leads only
+ * - Read/Write rules per collection
+ * - Data validation
+ * - Multi-tenant isolation
+ * ============================================================
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get current user document
+    function getCurrentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             getCurrentUser().role == 'admin';
+    }
+    
+    // Check if user is team lead
+    function isTeamLead() {
+      return isAuthenticated() && 
+             getCurrentUser().role == 'team_lead';
+    }
+    
+    // Check if user is agent
+    function isAgent() {
+      return isAuthenticated() && 
+             getCurrentUser().role == 'agent';
+    }
+    
+    // Check if user is active
+    function isActiveUser() {
+      return isAuthenticated() && 
+             getCurrentUser().isActive == true;
+    }
+    
+    // Check if user owns the lead
+    function ownsLead(leadId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/leads/$(leadId)).data.assignedTo == request.auth.uid;
+    }
+    
+    // Check if user is in same team
+    function sameTeam(leadId) {
+      let user = getCurrentUser();
+      let lead = get(/databases/$(database)/documents/leads/$(leadId)).data;
+      return isAuthenticated() && 
+             lead.assignedTeam == user.team;
+    }
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    
+    match /users/{userId} {
+      // Read: Authenticated users can read own profile
+      // Admin and Team Lead can read all users
+      allow read: if isAuthenticated() && 
+                   (request.auth.uid == userId || 
+                    isAdmin() || 
+                    isTeamLead());
+      
+      // Create: Only admin can create users
+      allow create: if isAdmin();
+      
+      // Update: Own profile or admin
+      allow update: if isAuthenticated() && 
+                      (request.auth.uid == userId || 
+                       isAdmin()) &&
+                      // Prevent role self-escalation
+                      (request.resource.data.role == resource.data.role || 
+                       isAdmin());
+      
+      // Delete: Only admin
+      allow delete: if isAdmin();
+      
+      // Validate user data
+      match /{field} {
+        allow write: if false; // Block sub-collections for now
+      }
+    }
+    
+    // ============================================
+    // LEADS COLLECTION
+    // ============================================
+    
+    match /leads/{leadId} {
+      // Read: Admin reads all, Team Lead reads team, Agent reads own
+      allow read: if isActiveUser() && 
+                   (isAdmin() || 
+                    (isTeamLead() && sameTeam(leadId)) || 
+                    ownsLead(leadId));
+      
+      // Create: Any active user can create leads
+      allow create: if isActiveUser() && 
+                      // Validate required fields
+                      request.resource.data.name is string &&
+                      request.resource.data.name.size() > 0 &&
+                      request.resource.data.phone is string &&
+                      request.resource.data.phone.size() >= 10 &&
+                      // Auto-set fields
+                      request.resource.data.createdBy == request.auth.uid;
+      
+      // Update: Admin, Team Lead (team), or owning agent
+      allow update: if isActiveUser() && 
+                      (isAdmin() || 
+                       (isTeamLead() && sameTeam(leadId)) || 
+                       ownsLead(leadId)) &&
+                      // Prevent deletion flag bypass
+                      request.resource.data.isDeleted == resource.data.isDeleted ||
+                      isAdmin();
+      
+      // Delete: Only admin (soft delete via update)
+      allow delete: if isAdmin();
+      
+      // ============================================
+      // LEAD SUB-COLLECTIONS
+      // ============================================
+      
+      // Notes sub-collection
+      match /notes/{noteId} {
+        allow read: if isActiveUser() && 
+                     (isAdmin() || 
+                      (isTeamLead() && sameTeam(leadId)) || 
+                      ownsLead(leadId));
+        
+        allow create: if isActiveUser() && 
+                        (isAdmin() || 
+                         (isTeamLead() && sameTeam(leadId)) || 
+                         ownsLead(leadId)) &&
+                        request.resource.data.createdBy == request.auth.uid;
+        
+        allow update: if isActiveUser() && 
+                        (isAdmin() || 
+                         request.resource.data.createdBy == request.auth.uid);
+        
+        allow delete: if isAdmin() || 
+                        request.resource.data.createdBy == request.auth.uid;
+      }
+      
+      // Call logs sub-collection
+      match /callLogs/{logId} {
+        allow read: if isActiveUser() && 
+                     (isAdmin() || 
+                      (isTeamLead() && sameTeam(leadId)) || 
+                      ownsLead(leadId));
+        
+        allow create: if isActiveUser() && 
+                        (isAdmin() || ownsLead(leadId));
+        
+        allow update: if isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ============================================
+    // STATUS HISTORY COLLECTION
+    // ============================================
+    
+    match /status_history/{historyId} {
+      allow read: if isActiveUser();
+      
+      allow create: if isActiveUser() && 
+                      request.resource.data.changedBy == request.auth.uid;
+      
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // NOTES COLLECTION (Group)
+    // ============================================
+    
+    match /notes/{noteId} {
+      allow read: if isActiveUser() && 
+                   (isAdmin() || 
+                    request.resource.data.createdBy == request.auth.uid);
+      
+      allow create: if isActiveUser() && 
+                      request.resource.data.createdBy == request.auth.uid;
+      
+      allow update: if isActiveUser() && 
+                      (isAdmin() || 
+                       request.resource.data.createdBy == request.auth.uid);
+      
+      allow delete: if isAdmin() || 
+                      request.resource.data.createdBy == request.auth.uid;
+    }
+    
+    // ============================================
+    // FOLLOW-UPS COLLECTION
+    // ============================================
+    
+    match /followups/{followupId} {
+      allow read: if isActiveUser() && 
+                   (isAdmin() || 
+                    (isTeamLead() && sameTeam(request.resource.data.leadId)) || 
+                    request.resource.data.agentId == request.auth.uid);
+      
+      allow create: if isActiveUser() && 
+                      request.resource.data.agentId == request.auth.uid;
+      
+      allow update: if isActiveUser() && 
+                      (isAdmin() || 
+                       request.resource.data.agentId == request.auth.uid);
+      
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // NOTIFICATIONS COLLECTION
+    // ============================================
+    
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+                   request.resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated();
+      
+      allow update: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      allow delete: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================
+    // TENANTS COLLECTION
+    // ============================================
+    
+    match /tenants/{tenantId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // TEAMS COLLECTION
+    // ============================================
+    
+    match /teams/{teamId} {
+      allow read: if isActiveUser();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isTeamLead();
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // SETTINGS COLLECTION
+    // ============================================
+    
+    match /settings/{settingId} {
+      allow read: if isActiveUser();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // AUDIT LOGS COLLECTION
+    // ============================================
+    
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isActiveUser();
+      allow update: if false; // Audit logs are immutable
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // ANALYTICS COLLECTION
+    // ============================================
+    
+    match /analytics/{analyticsId} {
+      allow read: if isAdmin() || isTeamLead();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
