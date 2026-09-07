@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aahar Shudhi - Lead Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>Aahar Shudhi - Complete Lead Management</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -12,6 +12,8 @@
     <style>
         :root {
             --primary: #2a5c3e;
+            --primary-light: #3d7a54;
+            --primary-dark: #1d4630;
             --primary-bg: #e3f0e5;
             --white: #fff;
             --bg: #f0f4f1;
@@ -20,488 +22,783 @@
             --border: #dee2e6;
             --danger: #dc3545;
             --danger-bg: #f8d7da;
+            --success: #28a745;
+            --success-bg: #d4edda;
+            --warning: #ffc107;
+            --warning-bg: #fff3cd;
+            --info: #17a2b8;
+            --info-bg: #d1ecf1;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --shadow: 0 2px 10px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background: var(--bg); min-height: 100vh; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+        body { background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--primary-light);border-radius:3px}
         
-        /* Login */
-        #login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .login-box { background: white; border-radius: 20px; padding: 40px 30px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; }
-        .login-box h1 { font-size: 1.4rem; color: var(--primary); margin: 15px 0; }
-        .login-box input { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; margin-bottom: 12px; }
-        .login-box button { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 25px; font-size: 1rem; font-weight: 700; cursor: pointer; }
-        #login-error { background: var(--danger-bg); color: #721c24; padding: 10px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 12px; display: none; }
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes scaleIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
         
-        /* Dashboard */
-        #dashboard { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
-        .navbar { background: white; padding: 15px 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .navbar-brand { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
-        .navbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn { padding: 10px 16px; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: var(--danger-bg); color: #721c24; }
+        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#f0f4f1,#e3f0e5,#d4edda)}
+        .login-box{background:white;border-radius:20px;padding:40px 30px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);text-align:center;animation:slideUp .5s}
+        .login-box h1{font-size:1.4rem;color:var(--primary);margin:15px 0}
+        .login-box input{width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-size:.9rem;margin-bottom:12px}
+        .login-box button{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:25px;font-size:1rem;font-weight:700;cursor:pointer}
+        #login-error{background:var(--danger-bg);color:#721c24;padding:10px;border-radius:8px;font-size:.8rem;margin-bottom:12px;display:none}
         
-        .tabs { display: flex; gap: 5px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn { padding: 10px 16px; border: none; background: transparent; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        #dashboard{display:none;padding:20px;max-width:1400px;margin:0 auto}
+        .navbar{background:white;padding:15px 20px;border-radius:15px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);margin-bottom:20px;flex-wrap:wrap;gap:10px}
+        .navbar-brand{font-weight:700;font-size:1.2rem;color:var(--primary)}
+        .navbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .btn{padding:10px 16px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-size:.8rem;transition:all .3s;white-space:nowrap;font-family:inherit}
+        .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+        .btn-primary{background:var(--primary);color:white}
+        .btn-danger{background:var(--danger-bg);color:#721c24}
         
-        .metrics-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .metric-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); text-align: center; }
-        .metric-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
-        .metric-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+        .tabs{display:flex;gap:5px;background:white;padding:8px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:15px;overflow-x:auto}
+        .tab-btn{padding:10px 16px;border:none;background:transparent;border-radius:20px;cursor:pointer;font-weight:600;font-size:.8rem;color:var(--muted);white-space:nowrap;font-family:inherit}
+        .tab-btn.active{background:var(--primary);color:white}
+        .tab-content{display:none;animation:fadeIn .3s}
+        .tab-content.active{display:block}
         
-        .kanban-board { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; }
-        .kanban-column { background: #e9ecef; border-radius: 12px; min-width: 250px; width: 270px; padding: 12px; flex-shrink: 0; }
-        .kanban-column-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: white; border-radius: 8px; margin-bottom: 10px; font-weight: 700; font-size: 0.85rem; }
-        .kanban-count { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
-        .lead-card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); cursor: grab; }
-        .lead-card h4 { font-size: 0.85rem; }
-        .lead-card p { font-size: 0.75rem; color: var(--muted); }
-        .lead-card-actions { display: flex; gap: 4px; margin-top: 8px; }
-        .lead-card-actions button { flex: 1; padding: 5px; border: none; border-radius: 12px; cursor: pointer; font-size: 0.65rem; font-weight: 600; }
-        .btn-call { background: #e3f0e5; color: #1e7e34; }
-        .btn-wa { background: #d4edda; color: #155724; }
-        .btn-move { background: #fff3cd; color: #856404; }
+        .metrics-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+        .metric-card{background:white;padding:15px;border-radius:12px;box-shadow:var(--shadow);text-align:center;cursor:pointer;transition:all .3s}
+        .metric-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+        .metric-value{font-size:1.4rem;font-weight:700;color:var(--primary)}
+        .metric-label{font-size:.65rem;color:var(--muted);font-weight:600;text-transform:uppercase}
         
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); overflow-x: auto; padding: 15px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th { background: #f8f9fa; color: var(--primary); padding: 10px; text-align: left; border-bottom: 2px solid var(--border); }
-        td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .kanban-board{display:flex;gap:12px;overflow-x:auto;padding:10px 0}
+        .kanban-column{background:#e9ecef;border-radius:12px;min-width:240px;width:260px;padding:12px;flex-shrink:0;max-height:60vh;display:flex;flex-direction:column}
+        .kanban-column-header{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;margin-bottom:10px;font-weight:700;font-size:.85rem}
+        .kanban-count{background:var(--primary);color:white;padding:2px 8px;border-radius:12px;font-size:.7rem}
+        .kanban-cards{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
         
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: white; border-radius: 20px; padding: 25px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .modal-content h2 { color: var(--primary); margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: 600; font-size: 0.78rem; margin-bottom: 5px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; }
-        .modal-actions { display: flex; gap: 10px; }
-        .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; }
+        .lead-card{background:white;border-radius:10px;padding:12px;box-shadow:0 2px 5px rgba(0,0,0,0.06);cursor:grab;transition:all .3s}
+        .lead-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+        .lead-card h4{font-size:.85rem}
+        .lead-card p{font-size:.72rem;color:var(--muted)}
+        .lead-card-actions{display:flex;gap:4px;margin-top:8px}
+        .lead-card-actions button{flex:1;padding:5px;border:none;border-radius:12px;cursor:pointer;font-size:.65rem;font-weight:600}
+        .btn-call{background:#e3f0e5;color:#1e7e34}.btn-wa{background:#d4edda;color:#155724}.btn-move{background:var(--info-bg);color:#0c5460}
         
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
-        .toast { padding: 12px 18px; border-radius: 10px; color: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
-        .toast-success { background: var(--primary); }
-        .toast-error { background: var(--danger); }
+        .table-container{background:white;border-radius:12px;box-shadow:var(--shadow);overflow-x:auto;padding:15px}
+        table{width:100%;border-collapse:collapse;font-size:.78rem}
+        th{background:#f8f9fa;color:var(--primary);padding:10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap}
+        td{padding:8px 10px;border-bottom:1px solid #f0f0f0}
+        tr:hover{background:#f8f9fa}
+        
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
+        .modal-overlay.active{display:flex;animation:fadeIn .3s}
+        .modal-content{background:white;border-radius:20px;padding:25px;width:100%;max-width:550px;max-height:85vh;overflow-y:auto;animation:slideUp .4s}
+        .modal-content h2{color:var(--primary);margin-bottom:20px;font-size:1.1rem}
+        .form-group{margin-bottom:12px}
+        .form-group label{display:block;font-weight:600;font-size:.75rem;margin-bottom:4px;color:#495057}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.83rem;font-family:inherit}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .modal-actions{display:flex;gap:10px;margin-top:15px}
+        .modal-actions button{flex:1;padding:11px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-family:inherit}
+        
+        #toast-container{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
+        .toast{padding:12px 18px;border-radius:10px;color:white;font-weight:600;font-size:.8rem;cursor:pointer;animation:slideInRight .3s}
+        .toast-success{background:var(--primary)}.toast-error{background:var(--danger)}.toast-warning{background:var(--warning);color:var(--text)}
+        
+        @media(max-width:600px){
+            #dashboard{padding:10px}.metrics-bar{grid-template-columns:repeat(2,1fr)}
+            .kanban-column{min-width:200px;width:220px}.form-row{grid-template-columns:1fr}
+        }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="login-box">
-            <h1>🌿 Aahar Shudhi</h1>
-            <p style="color:#6c757d;margin-bottom:20px;">Lead Management System</p>
-            <div id="login-error"></div>
-            <input type="email" id="login-email" placeholder="Email">
-            <input type="password" id="login-password" placeholder="Password">
-            <button onclick="handleLogin()">🔐 Sign In</button>
-            <p style="margin-top:15px;font-size:0.7rem;color:#6c757d;">admin@aahar.com / Admin@123</p>
-        </div>
+<!-- LOGIN -->
+<div id="login-screen">
+    <div class="login-box">
+        <h1>🌿 Aahar Shudhi</h1>
+        <p style="color:var(--muted);margin-bottom:20px;">Complete Lead Management</p>
+        <div id="login-error"></div>
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="password" id="login-password" placeholder="Password">
+        <button onclick="handleLogin()">🔐 Sign In</button>
+        <p style="margin-top:12px;font-size:.7rem;color:var(--muted);">admin@aahar.com / Admin@123</p>
     </div>
+</div>
 
-    <div id="dashboard">
-        <nav class="navbar">
-            <div class="navbar-brand">🌿 Aahar Shudhi</div>
-            <div class="navbar-actions">
-                <button class="btn btn-primary" onclick="openLeadModal()">+ Add Lead</button>
-                <button class="btn btn-primary" onclick="openTeamModal()">+ Add Member</button>
-                <button class="btn btn-primary" onclick="openTenantModal()">+ Tenant</button>
-                <button class="btn btn-danger" onclick="handleLogout()">🚪</button>
-            </div>
-        </nav>
-        
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('kanban')">📋 Kanban</button>
-            <button class="tab-btn" onclick="switchTab('leads')">👥 Leads</button>
-            <button class="tab-btn" onclick="switchTab('team')">👥 Team</button>
-            <button class="tab-btn" onclick="switchTab('tenants')">🏢 Tenants</button>
+<!-- DASHBOARD -->
+<div id="dashboard">
+    <nav class="navbar">
+        <div class="navbar-brand">🌿 Aahar Shudhi</div>
+        <div class="navbar-actions">
+            <button class="btn btn-primary" onclick="openLeadModal()">+ Lead</button>
+            <button class="btn btn-primary" onclick="openOrderModal()">+ Order</button>
+            <button class="btn btn-primary" onclick="openTeamModal()">+ Member</button>
+            <button class="btn btn-primary" onclick="openTenantModal()">+ Tenant</button>
+            <button class="btn btn-danger" onclick="handleLogout()">🚪</button>
         </div>
-        
-        <div id="tab-dashboard" class="tab-content active"><div class="metrics-bar" id="metrics-bar"></div></div>
-        <div id="tab-kanban" class="tab-content"><div class="kanban-board" id="kanban-board"></div></div>
-        <div id="tab-leads" class="tab-content"><div class="table-container" id="leads-table"></div></div>
-        <div id="tab-team" class="tab-content"><div class="table-container" id="team-table"></div></div>
-        <div id="tab-tenants" class="tab-content"><div class="table-container" id="tenants-table"></div></div>
+    </nav>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('kanban')">📋 Kanban</button>
+        <button class="tab-btn" onclick="switchTab('leads')">👥 Leads</button>
+        <button class="tab-btn" onclick="switchTab('orders')">📦 Orders</button>
+        <button class="tab-btn" onclick="switchTab('team')">👥 Team</button>
+        <button class="tab-btn" onclick="switchTab('tenants')">🏢 Tenants</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
+    
+    <div id="tab-dashboard" class="tab-content active"><div class="metrics-bar" id="metrics-bar"></div></div>
+    <div id="tab-kanban" class="tab-content"><div class="kanban-board" id="kanban-board"></div></div>
+    <div id="tab-leads" class="tab-content"><div class="table-container" id="leads-table"></div></div>
+    <div id="tab-orders" class="tab-content"><div class="table-container" id="orders-table"></div></div>
+    <div id="tab-team" class="tab-content"><div class="table-container" id="team-table"></div></div>
+    <div id="tab-tenants" class="tab-content"><div class="table-container" id="tenants-table"></div></div>
+    <div id="tab-settings" class="tab-content"><div class="table-container" id="settings-container"></div></div>
+</div>
 
-    <div class="modal-overlay" id="lead-modal">
-        <div class="modal-content">
-            <h2>🌿 Add Lead</h2>
-            <div class="form-group"><label>Name *</label><input type="text" id="lead-name"></div>
-            <div class="form-group"><label>Phone *</label><input type="tel" id="lead-phone"></div>
+<!-- LEAD MODAL -->
+<div class="modal-overlay" id="lead-modal">
+    <div class="modal-content">
+        <h2>🌿 Add Lead</h2>
+        <div class="form-group"><label>Name *</label><input type="text" id="lead-name"></div>
+        <div class="form-group"><label>Phone *</label><input type="tel" id="lead-phone"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="lead-email"></div>
             <div class="form-group"><label>City</label><input type="text" id="lead-city"></div>
-            <div class="form-group"><label>Product</label><select id="lead-product"><option>Chyawanprash</option><option>Ashwagandha</option><option>Triphala</option><option>Giloy Juice</option><option>Brahmi</option><option>Other</option></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Product</label><select id="lead-product"></select></div>
+            <div class="form-group"><label>Source</label><select id="lead-source"></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Priority</label><select id="lead-priority"><option>Normal</option><option>Hot</option><option>Warm</option><option>Cold</option></select></div>
             <div class="form-group"><label>Assign To</label><select id="lead-assign"></select></div>
-            <div class="modal-actions">
-                <button style="background:#f8f9fa;" onclick="closeLeadModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveLead()">💾 Save</button>
-            </div>
+        </div>
+        <div class="form-group"><label>Notes</label><textarea id="lead-notes" rows="2"></textarea></div>
+        <div class="modal-actions">
+            <button style="background:#f8f9fa;color:#495057" onclick="closeLeadModal()">Cancel</button>
+            <button style="background:#2a5c3e;color:white" onclick="saveLead()">💾 Save</button>
         </div>
     </div>
+</div>
 
-    <div class="modal-overlay" id="team-modal">
-        <div class="modal-content">
-            <h2>👥 Add Team Member</h2>
-            <div class="form-group"><label>Name *</label><input type="text" id="team-name"></div>
-            <div class="form-group"><label>Email *</label><input type="email" id="team-email"></div>
-            <div class="form-group"><label>Password *</label><input type="password" id="team-password"></div>
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="order-modal">
+    <div class="modal-content">
+        <h2>📦 Create Order</h2>
+        <div class="form-group"><label>Lead *</label><select id="order-lead"></select></div>
+        <div class="form-group"><label>Product *</label><select id="order-product"></select></div>
+        <div class="form-group"><label>Quantity *</label><input type="number" id="order-qty" value="1" min="1"></div>
+        <div class="form-row">
+            <div class="form-group"><label>Amount *</label><input type="number" id="order-amount" placeholder="₹"></div>
+            <div class="form-group"><label>Payment Method</label><select id="order-payment"><option>COD</option><option>UPI</option><option>Card</option></select></div>
+        </div>
+        <div class="form-group"><label>Shipping Address *</label><textarea id="order-address" rows="2"></textarea></div>
+        <div class="form-group"><label>Courier</label><select id="order-courier"><option value="">Select</option><option>Delhivery</option><option>Blue Dart</option><option>DTDC</option><option>India Post</option><option>Ekart</option><option>XpressBees</option></select></div>
+        <div class="modal-actions">
+            <button style="background:#f8f9fa;color:#495057" onclick="closeOrderModal()">Cancel</button>
+            <button style="background:#2a5c3e;color:white" onclick="saveOrder()">💾 Create Order</button>
+        </div>
+    </div>
+</div>
+
+<!-- TEAM MODAL -->
+<div class="modal-overlay" id="team-modal">
+    <div class="modal-content">
+        <h2>👥 Add Team Member</h2>
+        <div class="form-group"><label>Name *</label><input type="text" id="team-name"></div>
+        <div class="form-group"><label>Email *</label><input type="email" id="team-email"></div>
+        <div class="form-group"><label>Password *</label><input type="password" id="team-password"></div>
+        <div class="form-row">
             <div class="form-group"><label>Role</label><select id="team-role"><option value="agent">Agent</option><option value="team_lead">Team Lead</option><option value="admin">Admin</option></select></div>
             <div class="form-group"><label>Team</label><select id="team-group"><option>North</option><option>South</option><option>East</option><option>West</option><option>All</option></select></div>
-            <div class="modal-actions">
-                <button style="background:#f8f9fa;" onclick="closeTeamModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveTeamMember()">💾 Add</button>
-            </div>
+        </div>
+        <div class="modal-actions">
+            <button style="background:#f8f9fa;color:#495057" onclick="closeTeamModal()">Cancel</button>
+            <button style="background:#2a5c3e;color:white" onclick="saveTeamMember()">💾 Add</button>
         </div>
     </div>
+</div>
 
-    <div class="modal-overlay" id="tenant-modal">
-        <div class="modal-content">
-            <h2>🏢 Create Tenant</h2>
-            <div class="form-group"><label>Tenant Name *</label><input type="text" id="tenant-name"></div>
-            <div class="form-group"><label>Admin Email *</label><input type="email" id="tenant-email"></div>
-            <div class="form-group"><label>Admin Password *</label><input type="password" id="tenant-password"></div>
-            <div class="modal-actions">
-                <button style="background:#f8f9fa;" onclick="closeTenantModal()">Cancel</button>
-                <button style="background:#2a5c3e;color:white;" onclick="saveTenant()">💾 Create</button>
-            </div>
+<!-- TENANT MODAL -->
+<div class="modal-overlay" id="tenant-modal">
+    <div class="modal-content">
+        <h2>🏢 Create Tenant</h2>
+        <div class="form-group"><label>Tenant Name *</label><input type="text" id="tenant-name"></div>
+        <div class="form-group"><label>Admin Email *</label><input type="email" id="tenant-email"></div>
+        <div class="form-group"><label>Admin Password *</label><input type="password" id="tenant-password"></div>
+        <div class="modal-actions">
+            <button style="background:#f8f9fa;color:#495057" onclick="closeTenantModal()">Cancel</button>
+            <button style="background:#2a5c3e;color:white" onclick="saveTenant()">💾 Create</button>
         </div>
     </div>
+</div>
 
-    <div id="toast-container"></div>
+<div id="toast-container"></div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
-            authDomain: "avatar-wa-dual-crm.firebaseapp.com",
-            projectId: "avatar-wa-dual-crm",
-            storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
-            messagingSenderId: "946959261009",
-            appId: "1:946959261009:web:3ae08845917ac8cff8c770"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        
-        const STATUSES = ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'];
-        const STATUS_COLORS = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
-        
-        let currentUser = null;
-        let currentProfile = null;
-        let tenantId = null;
-        let allLeads = [];
-        let allMembers = [];
-        let allTenants = [];
-        
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                await loadProfile();
-                await loadAll();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('dashboard').style.display = 'none';
-            }
-        });
-        
-        async function loadProfile() {
-            const doc = await db.collection('users').doc(currentUser.uid).get();
-            if (doc.exists) {
-                currentProfile = { id: doc.id, ...doc.data() };
-                tenantId = currentProfile.tenantId || null;
-            } else {
-                currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true };
-                await db.collection('users').doc(currentUser.uid).set(currentProfile);
-            }
+<script>
+// ============================================
+// FIREBASE
+// ============================================
+const firebaseConfig = {
+    apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
+    authDomain: "avatar-wa-dual-crm.firebaseapp.com",
+    projectId: "avatar-wa-dual-crm",
+    storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
+    messagingSenderId: "946959261009",
+    appId: "1:946959261009:web:3ae08845917ac8cff8c770"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// ============================================
+// STATE
+// ============================================
+let currentUser = null;
+let currentProfile = null;
+let tenantId = null;
+let allLeads = [];
+let allMembers = [];
+let allTenants = [];
+let allOrders = [];
+let allSettings = { statuses: ['New','Contacted','Follow-up','Interested','Closed'], products: ['Chyawanprash','Ashwagandha','Triphala','Giloy Juice','Brahmi','Other'], sources: ['Facebook','Instagram','Google Ads','Website','WhatsApp','Reference','Walk-in','Other'] };
+
+const STATUS_COLORS = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
+const ORDER_STATUSES = ['Order Placed','Confirmed','Packed','Dispatched','In Transit','Delivered','RTO'];
+
+// ============================================
+// AUTH
+// ============================================
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        await loadProfile();
+        await loadSettings();
+        await loadAll();
+    } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+    }
+});
+
+async function loadProfile() {
+    try {
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) {
+            currentProfile = { id: doc.id, ...doc.data() };
+            tenantId = currentProfile.tenantId || null;
+        } else {
+            currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true };
+            await db.collection('users').doc(currentUser.uid).set(currentProfile);
         }
-        
-        async function loadAll() {
-            await loadLeads();
-            await loadMembers();
-            await loadTenants();
-            renderMetrics();
-            renderKanban();
-            renderLeadsTable();
-            renderTeamTable();
-            renderTenantsTable();
-            populateAgentDropdown();
+    } catch(e) { console.error(e); }
+}
+
+async function loadSettings() {
+    try {
+        const doc = await db.collection('settings').doc('platform').get();
+        if (doc.exists) {
+            allSettings = { ...allSettings, ...doc.data() };
         }
-        
-        async function loadLeads() {
-            let q = db.collection('leads').orderBy('createdAt', 'desc').limit(200);
-            if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
-            const snap = await q.get();
-            allLeads = [];
-            snap.forEach(d => allLeads.push({ id: d.id, ...d.data() }));
-        }
-        
-        async function loadMembers() {
-            let q = db.collection('users');
-            if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
-            const snap = await q.get();
-            allMembers = [];
-            snap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
-        }
-        
-        async function loadTenants() {
-            const snap = await db.collection('tenants').get();
-            allTenants = [];
-            snap.forEach(d => allTenants.push({ id: d.id, ...d.data() }));
-        }
-        
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const err = document.getElementById('login-error');
-            err.style.display = 'none';
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch(e) {
-                err.textContent = 'Login failed: ' + e.message;
-                err.style.display = 'block';
-            }
-        }
-        
-        async function handleLogout() { await auth.signOut(); }
-        
-        function renderMetrics() {
-            const total = allLeads.length;
-            const counts = {};
-            STATUSES.forEach(s => counts[s] = allLeads.filter(l => l.status === s).length);
-            const conv = total > 0 ? ((counts['Closed']/total)*100).toFixed(1) : 0;
-            
-            const metrics = [
-                ['📊','Total',total],['🆕','New',counts['New']],['📞','Contacted',counts['Contacted']],
-                ['⏰','Follow-up',counts['Follow-up']],['💚','Interested',counts['Interested']],
-                ['✅','Closed',counts['Closed']],['👥','Team',allMembers.length],['🎯','Conv',conv+'%']
-            ];
-            
-            document.getElementById('metrics-bar').innerHTML = metrics.map(([icon,label,val]) => `
-                <div class="metric-card">
-                    <div>${icon}</div>
-                    <div class="metric-value">${val}</div>
-                    <div class="metric-label">${label}</div>
-                </div>
-            `).join('');
-        }
-        
-        function renderKanban() {
-            const board = document.getElementById('kanban-board');
-            board.innerHTML = '';
-            STATUSES.forEach(status => {
-                const leads = allLeads.filter(l => l.status === status);
-                const col = document.createElement('div');
-                col.className = 'kanban-column';
-                col.style.background = STATUS_COLORS[status];
-                col.innerHTML = `
-                    <div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
-                    <div class="kanban-cards" data-status="${status}">
-                        ${leads.map(l => `
-                            <div class="lead-card" draggable="true" data-id="${l.id}">
-                                <h4>${l.name}</h4>
-                                <p>📞 ${l.phone}</p>
-                                ${l.assignedToName ? `<p>👤 ${l.assignedToName}</p>` : ''}
-                                <div class="lead-card-actions">
-                                    <button class="btn-call" onclick="callLead('${l.phone}')">📞</button>
-                                    <button class="btn-wa" onclick="waLead('${l.phone}')">💬</button>
-                                    <button class="btn-move" onclick="moveLead('${l.id}','${l.status}')">➡️</button>
-                                </div>
-                            </div>
-                        `).join('')}
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// LOAD ALL
+// ============================================
+async function loadAll() {
+    await Promise.all([loadLeads(), loadMembers(), loadTenants(), loadOrders()]);
+    renderMetrics();
+    renderKanban();
+    renderLeadsTable();
+    renderOrdersTable();
+    renderTeamTable();
+    renderTenantsTable();
+    renderSettings();
+    populateDropdowns();
+}
+
+async function loadLeads() {
+    let q = db.collection('leads').orderBy('createdAt', 'desc').limit(300);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allLeads = [];
+    snap.forEach(d => allLeads.push({ id: d.id, ...d.data() }));
+}
+
+async function loadMembers() {
+    let q = db.collection('users');
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allMembers = [];
+    snap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
+}
+
+async function loadTenants() {
+    const snap = await db.collection('tenants').get();
+    allTenants = [];
+    snap.forEach(d => allTenants.push({ id: d.id, ...d.data() }));
+}
+
+async function loadOrders() {
+    let q = db.collection('orders').orderBy('createdAt', 'desc').limit(300);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allOrders = [];
+    snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+}
+
+// ============================================
+// LOGIN/LOGOUT
+// ============================================
+async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch(e) {
+        err.textContent = 'Login failed: ' + e.message;
+        err.style.display = 'block';
+    }
+}
+async function handleLogout() { await auth.signOut(); }
+
+// ============================================
+// RENDER METRICS
+// ============================================
+function renderMetrics() {
+    const total = allLeads.length;
+    const counts = {};
+    allSettings.statuses.forEach(s => counts[s] = allLeads.filter(l => l.status === s).length);
+    const conv = total > 0 ? ((counts['Closed']/total)*100).toFixed(1) : 0;
+    const orderCount = allOrders.length;
+    const deliveredOrders = allOrders.filter(o => o.status === 'Delivered').length;
+    const rtoOrders = allOrders.filter(o => o.status === 'RTO').length;
+    
+    const metrics = [
+        ['📊','Total Leads',total],['🆕','New',counts['New']||0],['📞','Contacted',counts['Contacted']||0],
+        ['⏰','Follow-up',counts['Follow-up']||0],['💚','Interested',counts['Interested']||0],
+        ['✅','Closed',counts['Closed']||0],['📦','Orders',orderCount],['🚚','Delivered',deliveredOrders],
+        ['↩️','RTO',rtoOrders],['👥','Team',allMembers.length],['🏢','Tenants',allTenants.length],['🎯','Conv%',conv+'%']
+    ];
+    
+    document.getElementById('metrics-bar').innerHTML = metrics.map(([icon,label,val]) => `
+        <div class="metric-card"><div style="font-size:1.3rem">${icon}</div><div class="metric-value">${val}</div><div class="metric-label">${label}</div></div>
+    `).join('');
+}
+
+// ============================================
+// RENDER KANBAN
+// ============================================
+function renderKanban() {
+    const board = document.getElementById('kanban-board');
+    board.innerHTML = '';
+    allSettings.statuses.forEach(status => {
+        const leads = allLeads.filter(l => l.status === status);
+        const col = document.createElement('div');
+        col.className = 'kanban-column';
+        col.style.background = STATUS_COLORS[status] || '#e9ecef';
+        col.innerHTML = `
+            <div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
+            <div class="kanban-cards" data-status="${status}">
+                ${leads.map(l => `
+                    <div class="lead-card" draggable="true" data-id="${l.id}">
+                        <h4>${l.name}</h4>
+                        <p>📞 ${l.phone}</p>
+                        ${l.assignedToName ? `<p>👤 ${l.assignedToName}</p>` : ''}
+                        ${l.createdAt ? `<p>⏱ ${getTimeAgo(l.createdAt)}</p>` : ''}
+                        <div class="lead-card-actions">
+                            <button class="btn-call" onclick="event.stopPropagation();callLead('${l.phone}')">📞</button>
+                            <button class="btn-wa" onclick="event.stopPropagation();waLead('${l.phone}')">💬</button>
+                            <button class="btn-move" onclick="event.stopPropagation();moveLead('${l.id}','${l.status}')">➡️</button>
+                        </div>
                     </div>
-                `;
-                board.appendChild(col);
-            });
-            
-            document.querySelectorAll('.lead-card').forEach(c => {
-                c.addEventListener('dragstart', e => e.dataTransfer.setData('id', c.dataset.id));
-            });
-            document.querySelectorAll('.kanban-cards').forEach(z => {
-                z.addEventListener('dragover', e => e.preventDefault());
-                z.addEventListener('drop', async e => {
-                    e.preventDefault();
-                    const id = e.dataTransfer.getData('id');
-                    const status = z.dataset.status;
-                    await db.collection('leads').doc(id).update({
-                        status, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    showToast('✅ Moved to ' + status);
-                    loadAll();
-                });
-            });
-        }
-        
-        function renderLeadsTable() {
-            const c = document.getElementById('leads-table');
-            if (allLeads.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">📭 No leads</div>'; return; }
-            c.innerHTML = `
-                <table>
-                    <thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
-                    <tbody>${allLeads.map(l => `
-                        <tr>
-                            <td><strong>${l.name}</strong></td>
-                            <td>${l.phone}</td>
-                            <td>${l.product || '-'}</td>
-                            <td>${l.status}</td>
-                            <td>${l.assignedToName || 'Unassigned'}</td>
-                            <td>
-                                <button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer;" onclick="callLead('${l.phone}')">📞</button>
-                                <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer;" onclick="waLead('${l.phone}')">💬</button>
-                            </td>
-                        </tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
-        }
-        
-        function renderTeamTable() {
-            const c = document.getElementById('team-table');
-            if (allMembers.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">👥 No team members</div>'; return; }
-            c.innerHTML = `
-                <table>
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th></tr></thead>
-                    <tbody>${allMembers.map(m => `
-                        <tr><td><strong>${m.name || 'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team || 'All'}</td></tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
-        }
-        
-        function renderTenantsTable() {
-            const c = document.getElementById('tenants-table');
-            if (allTenants.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:#6c757d;">🏢 No tenants</div>'; return; }
-            c.innerHTML = `
-                <table>
-                    <thead><tr><th>Name</th><th>Plan</th><th>Status</th></tr></thead>
-                    <tbody>${allTenants.map(t => `
-                        <tr><td><strong>${t.name}</strong></td><td>${t.plan || 'Free'}</td><td>${t.status || 'Active'}</td></tr>
-                    `).join('')}</tbody>
-                </table>
-            `;
-        }
-        
-        function populateAgentDropdown() {
-            const select = document.getElementById('lead-assign');
-            const agents = allMembers.filter(m => m.role !== 'admin');
-            select.innerHTML = '<option value="">Unassigned</option>' + agents.map(a => `<option value="${a.id}">${a.name || a.email}</option>`).join('');
-        }
-        
-        function openLeadModal() { document.getElementById('lead-modal').classList.add('active'); populateAgentDropdown(); }
-        function closeLeadModal() { document.getElementById('lead-modal').classList.remove('active'); }
-        
-        async function saveLead() {
-            const name = document.getElementById('lead-name').value.trim();
-            const phone = document.getElementById('lead-phone').value.trim();
-            const assignId = document.getElementById('lead-assign').value;
-            if (!name || !phone) { showToast('Name and phone required', 'error'); return; }
-            
-            const member = allMembers.find(m => m.id === assignId);
-            
-            await db.collection('leads').add({
-                name, phone,
-                city: document.getElementById('lead-city').value.trim(),
-                product: document.getElementById('lead-product').value,
-                status: 'New',
-                tenantId,
-                assignedTo: assignId || null,
-                assignedToName: member ? member.name : null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast('✅ Lead added');
-            closeLeadModal();
+                `).join('')}
+            </div>
+        `;
+        board.appendChild(col);
+    });
+    
+    // Drag & Drop
+    document.querySelectorAll('.lead-card').forEach(c => {
+        c.addEventListener('dragstart', e => e.dataTransfer.setData('leadId', c.dataset.id));
+    });
+    document.querySelectorAll('.kanban-cards').forEach(z => {
+        z.addEventListener('dragover', e => e.preventDefault());
+        z.addEventListener('drop', async e => {
+            e.preventDefault();
+            const leadId = e.dataTransfer.getData('leadId');
+            const status = z.dataset.status;
+            await db.collection('leads').doc(leadId).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            showToast('✅ Moved to ' + status);
             loadAll();
-        }
-        
-        function openTeamModal() { document.getElementById('team-modal').classList.add('active'); }
-        function closeTeamModal() { document.getElementById('team-modal').classList.remove('active'); }
-        
-        async function saveTeamMember() {
-            const name = document.getElementById('team-name').value.trim();
-            const email = document.getElementById('team-email').value.trim();
-            const password = document.getElementById('team-password').value;
-            if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
-            
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                await db.collection('users').doc(cred.user.uid).set({
-                    name, email,
-                    role: document.getElementById('team-role').value,
-                    team: document.getElementById('team-group').value,
-                    tenantId,
-                    isActive: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast('✅ Member added');
-                closeTeamModal();
-                loadAll();
-            } catch(e) {
-                showToast('Error: ' + e.message, 'error');
-            }
-        }
-        
-        function openTenantModal() { document.getElementById('tenant-modal').classList.add('active'); }
-        function closeTenantModal() { document.getElementById('tenant-modal').classList.remove('active'); }
-        
-        async function saveTenant() {
-            const name = document.getElementById('tenant-name').value.trim();
-            const email = document.getElementById('tenant-email').value.trim();
-            const password = document.getElementById('tenant-password').value;
-            if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
-            
-            try {
-                const tenantRef = await db.collection('tenants').add({
-                    name, plan: 'Free', status: 'Active',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                const cred = await auth.createUserWithEmailAndPassword(email, password);
-                await db.collection('users').doc(cred.user.uid).set({
-                    name: name + ' Admin', email, role: 'admin', tenantId: tenantRef.id,
-                    isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast('✅ Tenant created');
-                closeTenantModal();
-                loadAll();
-            } catch(e) {
-                showToast('Error: ' + e.message, 'error');
-            }
-        }
-        
-        async function moveLead(id, current) {
-            const idx = STATUSES.indexOf(current);
-            const next = STATUSES[(idx + 1) % STATUSES.length];
-            await db.collection('leads').doc(id).update({
-                status: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast('✅ Moved to ' + next);
-            loadAll();
-        }
-        
-        function callLead(phone) { if(phone) window.location.href = 'tel:+91' + phone; }
-        function waLead(phone) { if(phone) window.open('https://wa.me/91' + phone, '_blank'); }
-        
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab)));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
-        }
-        
-        function showToast(msg, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + (type === 'error' ? 'toast-error' : 'toast-success');
-            toast.textContent = msg;
-            toast.onclick = () => toast.remove();
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-        
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
         });
-    </script>
+    });
+}
+
+// ============================================
+// RENDER TABLES
+// ============================================
+function renderLeadsTable() {
+    const c = document.getElementById('leads-table');
+    if (allLeads.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">📭 No leads</div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Assigned</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody>${allLeads.map(l => `
+        <tr><td><strong>${l.name}</strong></td><td>${l.phone}</td><td>${l.product||'-'}</td>
+        <td><span style="padding:3px 10px;border-radius:12px;background:${STATUS_COLORS[l.status]};font-size:.7rem">${l.status}</span></td>
+        <td>${l.assignedToName||'Unassigned'}</td><td>${l.createdAt?getTimeAgo(l.createdAt):'-'}</td>
+        <td><button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="callLead('${l.phone}')">📞</button>
+        <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="waLead('${l.phone}')">💬</button>
+        <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteLead('${l.id}')">🗑️</button></td></tr>
+    `).join('')}</tbody></table>`;
+}
+
+function renderOrdersTable() {
+    const c = document.getElementById('orders-table');
+    if (allOrders.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">📦 No orders</div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Order ID</th><th>Lead</th><th>Product</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Status</th><th>Courier</th><th>AWB</th><th>Actions</th></tr></thead>
+    <tbody>${allOrders.map(o => `
+        <tr><td><strong>${o.orderId||o.id.substring(0,8)}</strong></td><td>${o.leadName||'-'}</td><td>${o.product}</td>
+        <td>${o.qty}</td><td>₹${o.amount}</td><td>${o.paymentMethod}</td>
+        <td><span style="padding:3px 10px;border-radius:12px;background:${getOrderStatusColor(o.status)};font-size:.7rem">${o.status}</span></td>
+        <td>${o.courier||'-'}</td><td>${o.awb||'-'}</td>
+        <td>
+            <button style="background:var(--info-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="advanceOrder('${o.id}','${o.status}')">➡️</button>
+            <button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="markRTO('${o.id}')">↩️</button>
+        </td></tr>
+    `).join('')}</tbody></table>`;
+}
+
+function renderTeamTable() {
+    const c = document.getElementById('team-table');
+    if (allMembers.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">👥 No members</div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${allMembers.map(m => `
+        <tr><td><strong>${m.name||'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team||'All'}</td>
+        <td>${m.isActive !== false ? '✅' : '❌'}</td>
+        <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="removeMember('${m.id}')">🗑️</button></td></tr>
+    `).join('')}</tbody></table>`;
+}
+
+function renderTenantsTable() {
+    const c = document.getElementById('tenants-table');
+    if (allTenants.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">🏢 No tenants</div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Plan</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>${allTenants.map(t => `
+        <tr><td><strong>${t.name}</strong></td><td>${t.plan||'Free'}</td><td>${t.status||'Active'}</td><td>${t.createdAt?getTimeAgo(t.createdAt):'-'}</td></tr>
+    `).join('')}</tbody></table>`;
+}
+
+function renderSettings() {
+    const c = document.getElementById('settings-container');
+    c.innerHTML = `
+        <h3 style="color:var(--primary);margin-bottom:15px">⚙️ Platform Settings</h3>
+        <div class="form-group"><label>Lead Statuses (comma separated)</label>
+        <input type="text" id="settings-statuses" value="${allSettings.statuses.join(', ')}"></div>
+        <div class="form-group"><label>Products (comma separated)</label>
+        <input type="text" id="settings-products" value="${allSettings.products.join(', ')}"></div>
+        <div class="form-group"><label>Sources (comma separated)</label>
+        <input type="text" id="settings-sources" value="${allSettings.sources.join(', ')}"></div>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+    `;
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function getTimeAgo(timestamp) {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return Math.floor(seconds/60)+'m';
+    if (seconds < 86400) return Math.floor(seconds/3600)+'h';
+    return Math.floor(seconds/86400)+'d';
+}
+
+function getOrderStatusColor(status) {
+    const colors = {'Order Placed':'#fff3cd','Confirmed':'#d1ecf1','Packed':'#e7d9ff','Dispatched':'#fff3cd','In Transit':'#d1ecf1','Delivered':'#d4edda','RTO':'#f8d7da'};
+    return colors[status] || '#e9ecef';
+}
+
+function populateDropdowns() {
+    // Lead Product
+    const productSelect = document.getElementById('lead-product');
+    productSelect.innerHTML = '<option value="">Select</option>' + allSettings.products.map(p => `<option>${p}</option>`).join('');
+    
+    // Lead Source
+    const sourceSelect = document.getElementById('lead-source');
+    sourceSelect.innerHTML = '<option value="">Select</option>' + allSettings.sources.map(s => `<option>${s}</option>`).join('');
+    
+    // Lead Assign
+    const assignSelect = document.getElementById('lead-assign');
+    const agents = allMembers.filter(m => m.role !== 'admin');
+    assignSelect.innerHTML = '<option value="">Unassigned</option>' + agents.map(a => `<option value="${a.id}">${a.name||a.email}</option>`).join('');
+    
+    // Order Lead
+    const orderLeadSelect = document.getElementById('order-lead');
+    orderLeadSelect.innerHTML = '<option value="">Select Lead</option>' + allLeads.map(l => `<option value="${l.id}">${l.name} - ${l.phone}</option>`).join('');
+    
+    // Order Product
+    const orderProductSelect = document.getElementById('order-product');
+    orderProductSelect.innerHTML = '<option value="">Select</option>' + allSettings.products.map(p => `<option>${p}</option>`).join('');
+}
+
+// ============================================
+// LEAD MODAL
+// ============================================
+function openLeadModal() { document.getElementById('lead-modal').classList.add('active'); populateDropdowns(); }
+function closeLeadModal() { document.getElementById('lead-modal').classList.remove('active'); }
+
+async function saveLead() {
+    const name = document.getElementById('lead-name').value.trim();
+    const phone = document.getElementById('lead-phone').value.trim();
+    if (!name || !phone) { showToast('Name and phone required', 'error'); return; }
+    
+    const assignId = document.getElementById('lead-assign').value;
+    const member = allMembers.find(m => m.id === assignId);
+    
+    await db.collection('leads').add({
+        name, phone,
+        email: document.getElementById('lead-email').value.trim(),
+        city: document.getElementById('lead-city').value.trim(),
+        product: document.getElementById('lead-product').value,
+        source: document.getElementById('lead-source').value,
+        priority: document.getElementById('lead-priority').value,
+        notes: document.getElementById('lead-notes').value.trim(),
+        status: 'New',
+        tenantId,
+        assignedTo: assignId || null,
+        assignedToName: member ? (member.name||member.email) : null,
+        createdBy: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✅ Lead added');
+    closeLeadModal();
+    loadAll();
+}
+
+async function deleteLead(id) {
+    if (!confirm('Delete this lead?')) return;
+    await db.collection('leads').doc(id).delete();
+    showToast('✅ Lead deleted');
+    loadAll();
+}
+
+async function moveLead(id, current) {
+    const statuses = allSettings.statuses;
+    const idx = statuses.indexOf(current);
+    const next = statuses[(idx+1) % statuses.length];
+    await db.collection('leads').doc(id).update({ status: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('✅ Moved to ' + next);
+    loadAll();
+}
+
+// ============================================
+// ORDER MODAL
+// ============================================
+function openOrderModal() { document.getElementById('order-modal').classList.add('active'); populateDropdowns(); }
+function closeOrderModal() { document.getElementById('order-modal').classList.remove('active'); }
+
+async function saveOrder() {
+    const leadId = document.getElementById('order-lead').value;
+    const product = document.getElementById('order-product').value;
+    const qty = document.getElementById('order-qty').value;
+    const amount = document.getElementById('order-amount').value;
+    const payment = document.getElementById('order-payment').value;
+    const address = document.getElementById('order-address').value.trim();
+    const courier = document.getElementById('order-courier').value;
+    
+    if (!leadId || !product || !qty || !amount || !address) {
+        showToast('All fields required', 'error');
+        return;
+    }
+    
+    const lead = allLeads.find(l => l.id === leadId);
+    
+    const orderData = {
+        orderId: 'ORD-' + Date.now().toString().slice(-6),
+        leadId, leadName: lead?.name, leadPhone: lead?.phone,
+        product, qty: parseInt(qty), amount: parseFloat(amount),
+        paymentMethod: payment, address, courier,
+        status: 'Order Placed',
+        tenantId,
+        awb: courier ? generateAWB(courier) : null,
+        createdBy: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: [{ status: 'Order Placed', at: new Date().toISOString() }]
+    };
+    
+    await db.collection('orders').add(orderData);
+    
+    // Update lead status to Interested
+    if (leadId) {
+        await db.collection('leads').doc(leadId).update({ status: 'Interested', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    
+    showToast('✅ Order created');
+    closeOrderModal();
+    loadAll();
+}
+
+function generateAWB(courier) {
+    const prefix = { 'Delhivery': 'DL', 'Blue Dart': 'BD', 'DTDC': 'DT', 'India Post': 'IP', 'Ekart': 'EK', 'XpressBees': 'XB' }[courier] || 'XX';
+    return prefix + Date.now().toString().slice(-10);
+}
+
+async function advanceOrder(id, currentStatus) {
+    const idx = ORDER_STATUSES.indexOf(currentStatus);
+    if (idx === -1 || idx === ORDER_STATUSES.length - 1) return;
+    const next = ORDER_STATUSES[idx + 1];
+    
+    await db.collection('orders').doc(id).update({
+        status: next,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: firebase.firestore.FieldValue.arrayUnion({ status: next, at: new Date().toISOString() })
+    });
+    showToast('✅ Order ' + next);
+    loadAll();
+}
+
+async function markRTO(id) {
+    if (!confirm('Mark this order as RTO?')) return;
+    await db.collection('orders').doc(id).update({
+        status: 'RTO',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: firebase.firestore.FieldValue.arrayUnion({ status: 'RTO', at: new Date().toISOString() })
+    });
+    showToast('↩️ Order marked as RTO');
+    loadAll();
+}
+
+// ============================================
+// TEAM MODAL
+// ============================================
+function openTeamModal() { document.getElementById('team-modal').classList.add('active'); }
+function closeTeamModal() { document.getElementById('team-modal').classList.remove('active'); }
+
+async function saveTeamMember() {
+    const name = document.getElementById('team-name').value.trim();
+    const email = document.getElementById('team-email').value.trim();
+    const password = document.getElementById('team-password').value;
+    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
+    
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection('users').doc(cred.user.uid).set({
+            name, email,
+            role: document.getElementById('team-role').value,
+            team: document.getElementById('team-group').value,
+            tenantId,
+            isActive: true,
+            createdBy: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('✅ Member added');
+        closeTeamModal();
+        loadAll();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function removeMember(id) {
+    if (!confirm('Remove this member?')) return;
+    await db.collection('users').doc(id).update({ isActive: false });
+    showToast('✅ Member deactivated');
+    loadAll();
+}
+
+// ============================================
+// TENANT MODAL
+// ============================================
+function openTenantModal() { document.getElementById('tenant-modal').classList.add('active'); }
+function closeTenantModal() { document.getElementById('tenant-modal').classList.remove('active'); }
+
+async function saveTenant() {
+    const name = document.getElementById('tenant-name').value.trim();
+    const email = document.getElementById('tenant-email').value.trim();
+    const password = document.getElementById('tenant-password').value;
+    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
+    
+    try {
+        const tenantRef = await db.collection('tenants').add({
+            name, plan: 'Free', status: 'Active',
+            createdBy: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection('users').doc(cred.user.uid).set({
+            name: name + ' Admin', email, role: 'admin', tenantId: tenantRef.id,
+            isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast('✅ Tenant created');
+        closeTenantModal();
+        loadAll();
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+async function saveSettings() {
+    const statuses = document.getElementById('settings-statuses').value.split(',').map(s => s.trim()).filter(Boolean);
+    const products = document.getElementById('settings-products').value.split(',').map(s => s.trim()).filter(Boolean);
+    const sources = document.getElementById('settings-sources').value.split(',').map(s => s.trim()).filter(Boolean);
+    
+    await db.collection('settings').doc('platform').set({
+        statuses, products, sources,
+        updatedBy: currentUser.uid,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    allSettings = { statuses, products, sources };
+    showToast('✅ Settings saved');
+    loadAll();
+}
+
+// ============================================
+// QUICK ACTIONS
+// ============================================
+function callLead(phone) { if(phone) window.location.href = 'tel:+91' + phone.replace(/[^0-9]/g,''); }
+function waLead(phone) { if(phone) window.open('https://wa.me/91' + phone.replace(/[^0-9]/g,''), '_blank'); }
+
+// ============================================
+// TAB SWITCH
+// ============================================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab)));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+}
+
+// ============================================
+// TOAST
+// ============================================
+function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = msg;
+    toast.onclick = () => toast.remove();
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ============================================
+// MODAL OUTSIDE CLICK
+// ============================================
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+
+console.log('✅ Aahar Shudhi Complete System Ready');
+</script>
 </body>
 </html>
