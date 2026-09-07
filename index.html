@@ -3,203 +3,1221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>Aahar Shudhi - Complete Lead Management</title>
+    <meta name="description" content="Aahar Shudhi - Multi-Tenant Lead Management System with Order Tracking, Delivery, RTO">
+    <meta name="theme-color" content="#2a5c3e">
+    <title>Aahar Shudhi - Complete Lead Management System</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
     <style>
+        /* ============================================
+           CSS VARIABLES
+           ============================================ */
         :root {
             --primary: #2a5c3e;
             --primary-light: #3d7a54;
             --primary-dark: #1d4630;
             --primary-bg: #e3f0e5;
-            --white: #fff;
-            --bg: #f0f4f1;
-            --text: #1e3a2f;
-            --muted: #6c757d;
+            --primary-hover: #357a4a;
+            --white: #ffffff;
+            --bg-main: #f0f4f1;
+            --bg-light: #f8f9fa;
+            --text-dark: #1e3a2f;
+            --text-muted: #6c757d;
+            --text-light: #adb5bd;
             --border: #dee2e6;
+            --border-light: #e9ecef;
             --danger: #dc3545;
             --danger-bg: #f8d7da;
+            --danger-text: #721c24;
             --success: #28a745;
             --success-bg: #d4edda;
+            --success-text: #155724;
             --warning: #ffc107;
             --warning-bg: #fff3cd;
+            --warning-text: #856404;
             --info: #17a2b8;
             --info-bg: #d1ecf1;
-            --radius: 12px;
+            --info-text: #0c5460;
+            --radius-sm: 6px;
+            --radius-md: 10px;
             --radius-lg: 16px;
-            --shadow: 0 2px 10px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+            --shadow-xl: 0 12px 36px rgba(0,0,0,0.12);
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            --transition-slow: 0.5s cubic-bezier(0.16,1,0.3,1);
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
-        body { background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
-        ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--primary-light);border-radius:3px}
         
-        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes slideInRight{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-        @keyframes scaleIn{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
         
-        #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#f0f4f1,#e3f0e5,#d4edda)}
-        .login-box{background:white;border-radius:20px;padding:40px 30px;width:100%;max-width:400px;box-shadow:var(--shadow-lg);text-align:center;animation:slideUp .5s}
-        .login-box h1{font-size:1.4rem;color:var(--primary);margin:15px 0}
-        .login-box input{width:100%;padding:13px;border:1px solid var(--border);border-radius:10px;font-size:.9rem;margin-bottom:12px}
-        .login-box button{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:25px;font-size:1rem;font-weight:700;cursor:pointer}
-        #login-error{background:var(--danger-bg);color:#721c24;padding:10px;border-radius:8px;font-size:.8rem;margin-bottom:12px;display:none}
+        html {
+            scroll-behavior: smooth;
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        #dashboard{display:none;padding:20px;max-width:1400px;margin:0 auto}
-        .navbar{background:white;padding:15px 20px;border-radius:15px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .navbar-brand{font-weight:700;font-size:1.2rem;color:var(--primary)}
-        .navbar-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .btn{padding:10px 16px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-size:.8rem;transition:all .3s;white-space:nowrap;font-family:inherit}
-        .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-        .btn-primary{background:var(--primary);color:white}
-        .btn-danger{background:var(--danger-bg);color:#721c24}
+        body {
+            background: var(--bg-main);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
         
-        .tabs{display:flex;gap:5px;background:white;padding:8px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:15px;overflow-x:auto}
-        .tab-btn{padding:10px 16px;border:none;background:transparent;border-radius:20px;cursor:pointer;font-weight:600;font-size:.8rem;color:var(--muted);white-space:nowrap;font-family:inherit}
-        .tab-btn.active{background:var(--primary);color:white}
-        .tab-content{display:none;animation:fadeIn .3s}
-        .tab-content.active{display:block}
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #e0e0e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         
-        .metrics-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px}
-        .metric-card{background:white;padding:15px;border-radius:12px;box-shadow:var(--shadow);text-align:center;cursor:pointer;transition:all .3s}
-        .metric-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
-        .metric-value{font-size:1.4rem;font-weight:700;color:var(--primary)}
-        .metric-label{font-size:.65rem;color:var(--muted);font-weight:600;text-transform:uppercase}
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes scaleOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.8); } }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
         
-        .kanban-board{display:flex;gap:12px;overflow-x:auto;padding:10px 0}
-        .kanban-column{background:#e9ecef;border-radius:12px;min-width:240px;width:260px;padding:12px;flex-shrink:0;max-height:60vh;display:flex;flex-direction:column}
-        .kanban-column-header{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:white;border-radius:8px;margin-bottom:10px;font-weight:700;font-size:.85rem}
-        .kanban-count{background:var(--primary);color:white;padding:2px 8px;border-radius:12px;font-size:.7rem}
-        .kanban-cards{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+        /* ============================================
+           LOGIN SCREEN
+           ============================================ */
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f4f1 0%, #e3f0e5 30%, #d4edda 60%, #c3e6cb 100%);
+            position: relative;
+            overflow: hidden;
+        }
         
-        .lead-card{background:white;border-radius:10px;padding:12px;box-shadow:0 2px 5px rgba(0,0,0,0.06);cursor:grab;transition:all .3s}
-        .lead-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
-        .lead-card h4{font-size:.85rem}
-        .lead-card p{font-size:.72rem;color:var(--muted)}
-        .lead-card-actions{display:flex;gap:4px;margin-top:8px}
-        .lead-card-actions button{flex:1;padding:5px;border:none;border-radius:12px;cursor:pointer;font-size:.65rem;font-weight:600}
-        .btn-call{background:#e3f0e5;color:#1e7e34}.btn-wa{background:#d4edda;color:#155724}.btn-move{background:var(--info-bg);color:#0c5460}
+        #login-screen::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(42,92,62,0.05) 0%, transparent 70%);
+            animation: spin 30s linear infinite;
+        }
         
-        .table-container{background:white;border-radius:12px;box-shadow:var(--shadow);overflow-x:auto;padding:15px}
-        table{width:100%;border-collapse:collapse;font-size:.78rem}
-        th{background:#f8f9fa;color:var(--primary);padding:10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap}
-        td{padding:8px 10px;border-bottom:1px solid #f0f0f0}
-        tr:hover{background:#f8f9fa}
+        .login-box {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
         
-        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px}
-        .modal-overlay.active{display:flex;animation:fadeIn .3s}
-        .modal-content{background:white;border-radius:20px;padding:25px;width:100%;max-width:550px;max-height:85vh;overflow-y:auto;animation:slideUp .4s}
-        .modal-content h2{color:var(--primary);margin-bottom:20px;font-size:1.1rem}
-        .form-group{margin-bottom:12px}
-        .form-group label{display:block;font-weight:600;font-size:.75rem;margin-bottom:4px;color:#495057}
-        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.83rem;font-family:inherit}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .modal-actions{display:flex;gap:10px;margin-top:15px}
-        .modal-actions button{flex:1;padding:11px;border:none;border-radius:25px;cursor:pointer;font-weight:600;font-family:inherit}
+        .login-logo {
+            font-size: 4rem;
+            animation: pulse 2s infinite;
+            display: block;
+            margin-bottom: 15px;
+        }
         
-        #toast-container{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px}
-        .toast{padding:12px 18px;border-radius:10px;color:white;font-weight:600;font-size:.8rem;cursor:pointer;animation:slideInRight .3s}
-        .toast-success{background:var(--primary)}.toast-error{background:var(--danger)}.toast-warning{background:var(--warning);color:var(--text)}
+        .login-box h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
         
-        @media(max-width:600px){
-            #dashboard{padding:10px}.metrics-bar{grid-template-columns:repeat(2,1fr)}
-            .kanban-column{min-width:200px;width:220px}.form-row{grid-template-columns:1fr}
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 35px;
+        }
+        
+        .login-error {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+        
+        .login-error.show { display: block; }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            color: var(--primary);
+            letter-spacing: 0.3px;
+        }
+        
+        .form-group label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all var(--transition-fast);
+            background: #fafafa;
+            font-family: inherit;
+            color: var(--text-dark);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(42,92,62,0.1);
+            background: var(--white);
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-light);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-login:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn-login:active { transform: scale(0.97); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .login-hint {
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-light);
+            padding: 10px;
+            border-radius: var(--radius-sm);
+        }
+        
+        /* ============================================
+           DASHBOARD LAYOUT
+           ============================================ */
+        #dashboard {
+            display: none;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* ============================================
+           NAVBAR
+           ============================================ */
+        .navbar {
+            background: var(--white);
+            padding: 18px 25px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        
+        .navbar-tenant {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: var(--primary-bg);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .navbar-user {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .navbar-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* ============================================
+           BUTTONS
+           ============================================ */
+        .btn {
+            padding: 11px 20px;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--transition-base);
+            white-space: nowrap;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.3px;
+        }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn:active { transform: scale(0.95); box-shadow: none; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-danger { background: var(--danger-bg); color: var(--danger-text); }
+        .btn-danger:hover { background: #f1c0c5; }
+        .btn-outline { background: var(--white); border: 1px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary-bg); }
+        .btn-success { background: var(--success-bg); color: var(--success-text); }
+        .btn-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .btn-sm { padding: 7px 14px; font-size: 0.75rem; }
+        .btn-lg { padding: 14px 28px; font-size: 1rem; }
+        .btn-block { width: 100%; justify-content: center; }
+        
+        /* ============================================
+           TABS
+           ============================================ */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            background: var(--white);
+            padding: 10px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .tabs::-webkit-scrollbar { display: none; }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            color: var(--text-muted);
+            transition: all var(--transition-base);
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: var(--primary-bg);
+            color: var(--primary);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .tab-content.active { display: block; }
+        
+        /* ============================================
+           DASHBOARD HEADER
+           ============================================ */
+        .dashboard-header {
+            margin-bottom: 25px;
+        }
+        
+        .dashboard-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        
+        .dashboard-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* ============================================
+           METRICS BAR
+           ============================================ */
+        .metrics-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .metric-card {
+            background: var(--white);
+            padding: 20px 15px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .metric-card:hover::before { opacity: 1; }
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-bg);
+        }
+        
+        .metric-icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.2;
+        }
+        
+        .metric-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        
+        /* ============================================
+           DASHBOARD GRID
+           ============================================ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-base);
+        }
+        
+        .card:hover { box-shadow: var(--shadow-md); }
+        
+        .card h3 {
+            font-size: 1rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        /* ============================================
+           KANBAN BOARD
+           ============================================ */
+        .kanban-board {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0 25px;
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .kanban-column {
+            background: #e9ecef;
+            border-radius: var(--radius-lg);
+            min-width: 270px;
+            width: 290px;
+            padding: 15px;
+            flex-shrink: 0;
+            scroll-snap-align: start;
+            max-height: 65vh;
+            display: flex;
+            flex-direction: column;
+            transition: all var(--transition-base);
+        }
+        
+        .kanban-column:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .kanban-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255,255,255,0.9);
+            border-radius: var(--radius-md);
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        
+        .kanban-count {
+            background: var(--primary);
+            color: var(--white);
+            padding: 3px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 25px;
+            text-align: center;
+        }
+        
+        .kanban-cards {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 2px;
+            transition: background 0.2s;
+        }
+        
+        .kanban-cards.drag-over {
+            background: rgba(42,92,62,0.08);
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--primary);
+        }
+        
+        /* ============================================
+           LEAD CARD
+           ============================================ */
+        .lead-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+            cursor: grab;
+            transition: all var(--transition-base);
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+        }
+        
+        .lead-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+        
+        .lead-card:active { cursor: grabbing; }
+        .lead-card.dragging { opacity: 0.5; transform: scale(0.95); box-shadow: none; }
+        
+        .lead-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .lead-card-identity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .lead-card-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .lead-card-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .lead-card-time {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        
+        .lead-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .lead-card-info p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .lead-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .lead-tag {
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+        
+        .tag-product { background: var(--primary-bg); color: var(--primary); }
+        .tag-hot { background: var(--warning-bg); color: var(--warning-text); }
+        .tag-source { background: #f8f9fa; color: var(--text-muted); }
+        .tag-agent { background: var(--info-bg); color: var(--info-text); }
+        
+        .lead-card-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .lead-card-actions button {
+            flex: 1;
+            padding: 7px 4px;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .lead-card-actions button:active { transform: scale(0.9); }
+        .btn-call { background: #e3f0e5; color: #1e7e34; }
+        .btn-call:hover { background: #d4edda; }
+        .btn-wa { background: #d4edda; color: #155724; }
+        .btn-wa:hover { background: #c3e6cb; }
+        .btn-note { background: var(--warning-bg); color: var(--warning-text); }
+        .btn-move { background: var(--info-bg); color: var(--info-text); }
+        .btn-move:hover { background: #bee5eb; }
+        
+        /* ============================================
+           TABLE STYLES
+           ============================================ */
+        .table-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .table-toolbar input,
+        .table-toolbar select {
+            padding: 11px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: all var(--transition-fast);
+            background: var(--white);
+        }
+        
+        .table-toolbar input:focus,
+        .table-toolbar select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(42,92,62,0.1);
+        }
+        
+        .table-toolbar input { flex: 1; min-width: 200px; }
+        
+        .table-container {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow-x: auto;
+            padding: 20px;
+        }
+        
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        
+        .table-container th {
+            background: var(--bg-light);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+        
+        .table-container td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        
+        .table-container tr:hover { background: var(--bg-light); }
+        
+        .status-badge {
+            padding: 5px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        
+        /* ============================================
+           MODAL
+           ============================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 550px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
+            overflow: hidden;
+        }
+        
+        .modal-lg { max-width: 700px; }
+        .modal-sm { max-width: 400px; }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-light);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-base);
+            color: var(--text-muted);
+        }
+        
+        .modal-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+        
+        .modal-footer button { flex: 1; }
+        
+        .section-title {
+            font-size: 0.95rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 20px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* ============================================
+           SETTINGS GRID
+           ============================================ */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        /* ============================================
+           TOAST
+           ============================================ */
+        #toast-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+        }
+        
+        .toast {
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-xl);
+            cursor: pointer;
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast-success { background: var(--primary); }
+        .toast-error { background: var(--danger); }
+        .toast-warning { background: var(--warning); color: var(--text-dark); }
+        .toast-info { background: var(--info); }
+        
+        /* ============================================
+           LOADING SPINNER
+           ============================================ */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid var(--white);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+        }
+        
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+        
+        .empty-state h3 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        @media (max-width: 1024px) {
+            #dashboard { padding: 15px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            #dashboard { padding: 10px; }
+            .navbar { padding: 12px 15px; }
+            .navbar-brand { font-size: 1rem; }
+            .metrics-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .metric-card { padding: 12px; }
+            .metric-value { font-size: 1.3rem; }
+            .kanban-column { min-width: 230px; width: 250px; }
+            .modal-content { padding: 0; }
+            .modal-header { padding: 15px; }
+            .modal-body { padding: 15px; }
+            .modal-footer { padding: 15px; }
+            .form-row { grid-template-columns: 1fr; gap: 0; }
+            .btn { padding: 8px 12px; font-size: 0.7rem; }
+            .tab-btn { padding: 8px 12px; font-size: 0.7rem; }
+            #toast-container { bottom: 10px; right: 10px; left: 10px; max-width: 100%; }
+        }
+        
+        @media (max-width: 480px) {
+            .metrics-bar { grid-template-columns: 1fr 1fr; }
+            .metric-value { font-size: 1.1rem; }
+            .metric-label { font-size: 0.6rem; }
+            .navbar-actions { width: 100%; justify-content: center; }
+            .lead-card-actions button { font-size: 0.6rem; padding: 5px 2px; }
         }
     </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN SCREEN -->
 <div id="login-screen">
     <div class="login-box">
-        <h1>🌿 Aahar Shudhi</h1>
-        <p style="color:var(--muted);margin-bottom:20px;">Complete Lead Management</p>
-        <div id="login-error"></div>
-        <input type="email" id="login-email" placeholder="Email">
-        <input type="password" id="login-password" placeholder="Password">
-        <button onclick="handleLogin()">🔐 Sign In</button>
-        <p style="margin-top:12px;font-size:.7rem;color:var(--muted);">admin@aahar.com / Admin@123</p>
+        <span class="login-logo">🌿</span>
+        <h1>Aahar Shudhi</h1>
+        <p class="login-subtitle">Complete Multi-Tenant Lead Management System</p>
+        <div id="login-error" class="login-error"></div>
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="login-email" placeholder="Enter your email" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        <button class="btn-login" id="login-btn" onclick="handleLogin()">🔐 Sign In</button>
+        <p class="login-hint">Default: admin@aahar.com / Admin@123</p>
     </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard">
     <nav class="navbar">
-        <div class="navbar-brand">🌿 Aahar Shudhi</div>
-        <div class="navbar-actions">
-            <button class="btn btn-primary" onclick="openLeadModal()">+ Lead</button>
-            <button class="btn btn-primary" onclick="openOrderModal()">+ Order</button>
-            <button class="btn btn-primary" onclick="openTeamModal()">+ Member</button>
-            <button class="btn btn-primary" onclick="openTenantModal()">+ Tenant</button>
-            <button class="btn btn-danger" onclick="handleLogout()">🚪</button>
+        <div class="navbar-left">
+            <span class="navbar-brand">🌿 Aahar Shudhi</span>
+            <span class="navbar-tenant" id="tenant-badge">🏢 Loading...</span>
+        </div>
+        <div class="navbar-right">
+            <span class="navbar-user" id="user-info"></span>
+            <div class="navbar-actions">
+                <button class="btn btn-primary btn-sm" onclick="openLeadModal()">+ Lead</button>
+                <button class="btn btn-primary btn-sm" onclick="openOrderModal()">+ Order</button>
+                <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Product</button>
+                <button class="btn btn-primary btn-sm" onclick="openTeamModal()">+ Member</button>
+                <button class="btn btn-primary btn-sm" onclick="openTenantModal()">+ Tenant</button>
+                <button class="btn btn-danger btn-sm" onclick="handleLogout()">🚪</button>
+            </div>
         </div>
     </nav>
     
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('kanban')">📋 Kanban</button>
-        <button class="tab-btn" onclick="switchTab('leads')">👥 Leads</button>
-        <button class="tab-btn" onclick="switchTab('orders')">📦 Orders</button>
-        <button class="tab-btn" onclick="switchTab('team')">👥 Team</button>
-        <button class="tab-btn" onclick="switchTab('tenants')">🏢 Tenants</button>
-        <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+        <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+        <button class="tab-btn" data-tab="kanban" onclick="switchTab('kanban')">📋 Kanban</button>
+        <button class="tab-btn" data-tab="leads" onclick="switchTab('leads')">👥 Leads</button>
+        <button class="tab-btn" data-tab="orders" onclick="switchTab('orders')">📦 Orders</button>
+        <button class="tab-btn" data-tab="products" onclick="switchTab('products')">🌿 Products</button>
+        <button class="tab-btn" data-tab="team" onclick="switchTab('team')">👥 Team</button>
+        <button class="tab-btn" data-tab="tenants" onclick="switchTab('tenants')">🏢 Tenants</button>
+        <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
     
-    <div id="tab-dashboard" class="tab-content active"><div class="metrics-bar" id="metrics-bar"></div></div>
-    <div id="tab-kanban" class="tab-content"><div class="kanban-board" id="kanban-board"></div></div>
-    <div id="tab-leads" class="tab-content"><div class="table-container" id="leads-table"></div></div>
-    <div id="tab-orders" class="tab-content"><div class="table-container" id="orders-table"></div></div>
-    <div id="tab-team" class="tab-content"><div class="table-container" id="team-table"></div></div>
-    <div id="tab-tenants" class="tab-content"><div class="table-container" id="tenants-table"></div></div>
-    <div id="tab-settings" class="tab-content"><div class="table-container" id="settings-container"></div></div>
+    <div id="tab-dashboard" class="tab-content active">
+        <div class="dashboard-header"><h2>📊 Dashboard</h2><p>Real-time overview</p></div>
+        <div class="metrics-bar" id="metrics-bar"></div>
+        <div class="dashboard-grid">
+            <div class="card"><h3>📈 Lead Status</h3><div id="lead-status-visual"></div></div>
+            <div class="card"><h3>📦 Orders</h3><div id="order-visual"></div></div>
+            <div class="card"><h3>👥 Team</h3><div id="team-visual"></div></div>
+            <div class="card"><h3>🌿 Products</h3><div id="product-visual"></div></div>
+        </div>
+    </div>
+    
+    <div id="tab-kanban" class="tab-content">
+        <div class="dashboard-header"><h2>📋 Kanban Board</h2><p>Drag cards to change status</p></div>
+        <div class="kanban-board" id="kanban-board"></div>
+    </div>
+    
+    <div id="tab-leads" class="tab-content">
+        <div class="dashboard-header"><h2>👥 All Leads</h2><p>Complete lead management</p></div>
+        <div class="table-toolbar">
+            <input type="text" placeholder="🔍 Search..." oninput="filterLeadsTable()">
+            <select onchange="filterLeadsTable()"><option value="All">All Status</option></select>
+            <select onchange="filterLeadsTable()"><option value="All">All Agents</option></select>
+        </div>
+        <div class="table-container" id="leads-table"></div>
+    </div>
+    
+    <div id="tab-orders" class="tab-content">
+        <div class="dashboard-header"><h2>📦 Orders</h2><p>Track packaging, delivery, RTO</p></div>
+        <div class="table-toolbar">
+            <input type="text" placeholder="🔍 Search..." oninput="filterOrdersTable()">
+            <select onchange="filterOrdersTable()"><option value="All">All Status</option></select>
+        </div>
+        <div class="table-container" id="orders-table"></div>
+    </div>
+    
+    <div id="tab-products" class="tab-content">
+        <div class="dashboard-header"><h2>🌿 Products</h2><p>Manage your catalog</p></div>
+        <div class="table-container" id="products-table"></div>
+    </div>
+    
+    <div id="tab-team" class="tab-content">
+        <div class="dashboard-header"><h2>👥 Team</h2><p>Manage your agents</p></div>
+        <div class="table-container" id="team-table"></div>
+    </div>
+    
+    <div id="tab-tenants" class="tab-content">
+        <div class="dashboard-header"><h2>🏢 Tenants</h2><p>Multi-tenant management</p></div>
+        <div class="table-container" id="tenants-table"></div>
+    </div>
+    
+    <div id="tab-settings" class="tab-content">
+        <div class="dashboard-header"><h2>⚙️ Settings</h2><p>Customize everything</p></div>
+        <div class="settings-grid">
+            <div class="card"><h3>📊 Statuses</h3><textarea id="settings-statuses" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit"></textarea></div>
+            <div class="card"><h3>📢 Sources</h3><textarea id="settings-sources" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit"></textarea></div>
+            <div class="card"><h3>⚡ Priorities</h3><textarea id="settings-priorities" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit"></textarea></div>
+            <div class="card"><h3>🚚 Couriers</h3><textarea id="settings-couriers" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit"></textarea></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:15px" onclick="saveSettings()">💾 Save All Settings</button>
+    </div>
 </div>
 
 <!-- LEAD MODAL -->
 <div class="modal-overlay" id="lead-modal">
-    <div class="modal-content">
-        <h2>🌿 Add Lead</h2>
-        <div class="form-group"><label>Name *</label><input type="text" id="lead-name"></div>
-        <div class="form-group"><label>Phone *</label><input type="tel" id="lead-phone"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="lead-email"></div>
-            <div class="form-group"><label>City</label><input type="text" id="lead-city"></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header"><h2>🌿 Add Lead</h2><button class="modal-close" onclick="closeLeadModal()">×</button></div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group"><label>Name *</label><input type="text" id="lead-name"></div>
+                <div class="form-group"><label>Phone *</label><input type="tel" id="lead-phone" maxlength="10"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Email</label><input type="email" id="lead-email"></div>
+                <div class="form-group"><label>City</label><input type="text" id="lead-city"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Product</label><select id="lead-product"></select></div>
+                <div class="form-group"><label>Source</label><select id="lead-source"></select></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Priority</label><select id="lead-priority"></select></div>
+                <div class="form-group"><label>Assign To</label><select id="lead-assign"></select></div>
+            </div>
+            <div class="form-group"><label>Notes</label><textarea id="lead-notes" rows="3"></textarea></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Product</label><select id="lead-product"></select></div>
-            <div class="form-group"><label>Source</label><select id="lead-source"></select></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>Priority</label><select id="lead-priority"><option>Normal</option><option>Hot</option><option>Warm</option><option>Cold</option></select></div>
-            <div class="form-group"><label>Assign To</label><select id="lead-assign"></select></div>
-        </div>
-        <div class="form-group"><label>Notes</label><textarea id="lead-notes" rows="2"></textarea></div>
-        <div class="modal-actions">
-            <button style="background:#f8f9fa;color:#495057" onclick="closeLeadModal()">Cancel</button>
-            <button style="background:#2a5c3e;color:white" onclick="saveLead()">💾 Save</button>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeLeadModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveLead()">💾 Save</button>
         </div>
     </div>
 </div>
 
 <!-- ORDER MODAL -->
 <div class="modal-overlay" id="order-modal">
-    <div class="modal-content">
-        <h2>📦 Create Order</h2>
-        <div class="form-group"><label>Lead *</label><select id="order-lead"></select></div>
-        <div class="form-group"><label>Product *</label><select id="order-product"></select></div>
-        <div class="form-group"><label>Quantity *</label><input type="number" id="order-qty" value="1" min="1"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Amount *</label><input type="number" id="order-amount" placeholder="₹"></div>
-            <div class="form-group"><label>Payment Method</label><select id="order-payment"><option>COD</option><option>UPI</option><option>Card</option></select></div>
+    <div class="modal-content modal-lg">
+        <div class="modal-header"><h2>📦 Create Order</h2><button class="modal-close" onclick="closeOrderModal()">×</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>Lead *</label><select id="order-lead"></select></div>
+            <div class="form-row">
+                <div class="form-group"><label>Product *</label><select id="order-product"></select></div>
+                <div class="form-group"><label>Qty *</label><input type="number" id="order-qty" value="1"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Amount *</label><input type="number" id="order-amount"></div>
+                <div class="form-group"><label>Payment</label><select id="order-payment"><option>COD</option><option>UPI</option><option>Card</option></select></div>
+            </div>
+            <h3 class="section-title">📍 Shipping Address</h3>
+            <div class="form-group"><label>Address 1 *</label><input type="text" id="order-address1"></div>
+            <div class="form-group"><label>Address 2</label><input type="text" id="order-address2"></div>
+            <div class="form-row">
+                <div class="form-group"><label>City *</label><input type="text" id="order-city"></div>
+                <div class="form-group"><label>State *</label><input type="text" id="order-state"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>PIN *</label><input type="text" id="order-pincode" maxlength="6"></div>
+                <div class="form-group"><label>Landmark</label><input type="text" id="order-landmark"></div>
+            </div>
+            <h3 class="section-title">🚚 Courier</h3>
+            <div class="form-row">
+                <div class="form-group"><label>Courier</label><select id="order-courier"></select></div>
+                <div class="form-group"><label>Warehouse</label><select id="order-warehouse"><option value="">Select</option><option>Delhi</option><option>Mumbai</option><option>Chennai</option></select></div>
+            </div>
         </div>
-        <div class="form-group"><label>Shipping Address *</label><textarea id="order-address" rows="2"></textarea></div>
-        <div class="form-group"><label>Courier</label><select id="order-courier"><option value="">Select</option><option>Delhivery</option><option>Blue Dart</option><option>DTDC</option><option>India Post</option><option>Ekart</option><option>XpressBees</option></select></div>
-        <div class="modal-actions">
-            <button style="background:#f8f9fa;color:#495057" onclick="closeOrderModal()">Cancel</button>
-            <button style="background:#2a5c3e;color:white" onclick="saveOrder()">💾 Create Order</button>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeOrderModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveOrder()">💾 Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="product-modal">
+    <div class="modal-content">
+        <div class="modal-header"><h2>🌿 Product</h2><button class="modal-close" onclick="closeProductModal()">×</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>Name *</label><input type="text" id="product-name"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Category</label><input type="text" id="product-category"></div>
+                <div class="form-group"><label>Price</label><input type="number" id="product-price"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="product-desc" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveProduct()">💾 Save</button>
         </div>
     </div>
 </div>
@@ -207,17 +1225,19 @@
 <!-- TEAM MODAL -->
 <div class="modal-overlay" id="team-modal">
     <div class="modal-content">
-        <h2>👥 Add Team Member</h2>
-        <div class="form-group"><label>Name *</label><input type="text" id="team-name"></div>
-        <div class="form-group"><label>Email *</label><input type="email" id="team-email"></div>
-        <div class="form-group"><label>Password *</label><input type="password" id="team-password"></div>
-        <div class="form-row">
-            <div class="form-group"><label>Role</label><select id="team-role"><option value="agent">Agent</option><option value="team_lead">Team Lead</option><option value="admin">Admin</option></select></div>
-            <div class="form-group"><label>Team</label><select id="team-group"><option>North</option><option>South</option><option>East</option><option>West</option><option>All</option></select></div>
+        <div class="modal-header"><h2>👥 Member</h2><button class="modal-close" onclick="closeTeamModal()">×</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>Name *</label><input type="text" id="team-name"></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="team-email"></div>
+            <div class="form-group"><label>Password *</label><input type="password" id="team-password"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Role</label><select id="team-role"><option value="agent">Agent</option><option value="team_lead">Team Lead</option><option value="admin">Admin</option></select></div>
+                <div class="form-group"><label>Team</label><select id="team-group"><option>North</option><option>South</option><option>East</option><option>West</option><option>All</option></select></div>
+            </div>
         </div>
-        <div class="modal-actions">
-            <button style="background:#f8f9fa;color:#495057" onclick="closeTeamModal()">Cancel</button>
-            <button style="background:#2a5c3e;color:white" onclick="saveTeamMember()">💾 Add</button>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeTeamModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveTeamMember()">💾 Add</button>
         </div>
     </div>
 </div>
@@ -225,13 +1245,15 @@
 <!-- TENANT MODAL -->
 <div class="modal-overlay" id="tenant-modal">
     <div class="modal-content">
-        <h2>🏢 Create Tenant</h2>
-        <div class="form-group"><label>Tenant Name *</label><input type="text" id="tenant-name"></div>
-        <div class="form-group"><label>Admin Email *</label><input type="email" id="tenant-email"></div>
-        <div class="form-group"><label>Admin Password *</label><input type="password" id="tenant-password"></div>
-        <div class="modal-actions">
-            <button style="background:#f8f9fa;color:#495057" onclick="closeTenantModal()">Cancel</button>
-            <button style="background:#2a5c3e;color:white" onclick="saveTenant()">💾 Create</button>
+        <div class="modal-header"><h2>🏢 Tenant</h2><button class="modal-close" onclick="closeTenantModal()">×</button></div>
+        <div class="modal-body">
+            <div class="form-group"><label>Name *</label><input type="text" id="tenant-name"></div>
+            <div class="form-group"><label>Admin Email *</label><input type="email" id="tenant-email"></div>
+            <div class="form-group"><label>Admin Password *</label><input type="password" id="tenant-password"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeTenantModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveTenant()">💾 Create</button>
         </div>
     </div>
 </div>
@@ -240,7 +1262,7 @@
 
 <script>
 // ============================================
-// FIREBASE
+// FIREBASE CONFIG
 // ============================================
 const firebaseConfig = {
     apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
@@ -250,7 +1272,6 @@ const firebaseConfig = {
     messagingSenderId: "946959261009",
     appId: "1:946959261009:web:3ae08845917ac8cff8c770"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -261,14 +1282,9 @@ const auth = firebase.auth();
 let currentUser = null;
 let currentProfile = null;
 let tenantId = null;
-let allLeads = [];
-let allMembers = [];
-let allTenants = [];
-let allOrders = [];
-let allSettings = { statuses: ['New','Contacted','Follow-up','Interested','Closed'], products: ['Chyawanprash','Ashwagandha','Triphala','Giloy Juice','Brahmi','Other'], sources: ['Facebook','Instagram','Google Ads','Website','WhatsApp','Reference','Walk-in','Other'] };
-
-const STATUS_COLORS = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
-const ORDER_STATUSES = ['Order Placed','Confirmed','Packed','Dispatched','In Transit','Delivered','RTO'];
+let allLeads = [], allMembers = [], allTenants = [], allOrders = [], allProducts = [];
+let allSettings = { statuses: ['New','Contacted','Follow-up','Interested','Closed'], sources: ['Facebook','Instagram','Website','Reference','Other'], priorities: ['Normal','Hot','Warm','Cold'], couriers: ['Delhivery','Blue Dart','DTDC','India Post','Ekart'] };
+const ORDER_STATUSES = ['Order Placed','Confirmed','Packed','Dispatched','In Transit','Out for Delivery','Delivered','RTO'];
 
 // ============================================
 // AUTH
@@ -290,478 +1306,298 @@ auth.onAuthStateChanged(async (user) => {
 async function loadProfile() {
     try {
         const doc = await db.collection('users').doc(currentUser.uid).get();
-        if (doc.exists) {
-            currentProfile = { id: doc.id, ...doc.data() };
-            tenantId = currentProfile.tenantId || null;
-        } else {
-            currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true };
-            await db.collection('users').doc(currentUser.uid).set(currentProfile);
-        }
+        if (doc.exists) { currentProfile = { id: doc.id, ...doc.data() }; tenantId = currentProfile.tenantId || null; }
+        else { currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true }; await db.collection('users').doc(currentUser.uid).set(currentProfile); }
+        document.getElementById('tenant-badge').innerHTML = currentProfile.isSuperAdmin ? '🏢 Super Admin' : (tenantId ? '🏢 Tenant' : '🏢 No Tenant');
+        document.getElementById('user-info').textContent = '👤 ' + currentUser.email;
     } catch(e) { console.error(e); }
 }
 
 async function loadSettings() {
-    try {
-        const doc = await db.collection('settings').doc('platform').get();
-        if (doc.exists) {
-            allSettings = { ...allSettings, ...doc.data() };
-        }
-    } catch(e) { console.error(e); }
+    try { const doc = await db.collection('settings').doc('platform').get(); if (doc.exists) allSettings = { ...allSettings, ...doc.data() }; } catch(e) {}
 }
 
 // ============================================
-// LOAD ALL
+// LOAD ALL DATA
 // ============================================
 async function loadAll() {
-    await Promise.all([loadLeads(), loadMembers(), loadTenants(), loadOrders()]);
-    renderMetrics();
-    renderKanban();
-    renderLeadsTable();
-    renderOrdersTable();
-    renderTeamTable();
-    renderTenantsTable();
-    renderSettings();
-    populateDropdowns();
+    await Promise.all([loadLeads(), loadMembers(), loadTenants(), loadOrders(), loadProducts()]);
+    renderMetrics(); renderKanban(); renderLeadsTable(); renderOrdersTable();
+    renderProductsTable(); renderTeamTable(); renderTenantsTable(); renderSettings(); populateDropdowns();
 }
 
 async function loadLeads() {
-    let q = db.collection('leads').orderBy('createdAt', 'desc').limit(300);
-    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
-    const snap = await q.get();
-    allLeads = [];
-    snap.forEach(d => allLeads.push({ id: d.id, ...d.data() }));
+    let q = db.collection('leads').orderBy('createdAt','desc').limit(500);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId','==',tenantId);
+    const snap = await q.get(); allLeads = []; snap.forEach(d => allLeads.push({id:d.id,...d.data()}));
 }
-
 async function loadMembers() {
     let q = db.collection('users');
-    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
-    const snap = await q.get();
-    allMembers = [];
-    snap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId','==',tenantId);
+    const snap = await q.get(); allMembers = []; snap.forEach(d => allMembers.push({id:d.id,...d.data()}));
 }
-
-async function loadTenants() {
-    const snap = await db.collection('tenants').get();
-    allTenants = [];
-    snap.forEach(d => allTenants.push({ id: d.id, ...d.data() }));
-}
-
+async function loadTenants() { const snap = await db.collection('tenants').get(); allTenants = []; snap.forEach(d => allTenants.push({id:d.id,...d.data()})); }
 async function loadOrders() {
-    let q = db.collection('orders').orderBy('createdAt', 'desc').limit(300);
-    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
-    const snap = await q.get();
-    allOrders = [];
-    snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+    let q = db.collection('orders').orderBy('createdAt','desc').limit(500);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId','==',tenantId);
+    const snap = await q.get(); allOrders = []; snap.forEach(d => allOrders.push({id:d.id,...d.data()}));
+}
+async function loadProducts() {
+    let q = db.collection('products');
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId','==',tenantId);
+    const snap = await q.get(); allProducts = []; snap.forEach(d => allProducts.push({id:d.id,...d.data()}));
+    if (allProducts.length === 0) {
+        const defaults = [{name:'Chyawanprash',category:'Immunity',price:599},{name:'Ashwagandha',category:'Wellness',price:499},{name:'Triphala',category:'Digestion',price:299}];
+        for (const p of defaults) await db.collection('products').add({...p, tenantId: tenantId||null, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+        await loadProducts();
+    }
 }
 
 // ============================================
-// LOGIN/LOGOUT
+// LOGIN
 // ============================================
 async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    const err = document.getElementById('login-error');
-    err.style.display = 'none';
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch(e) {
-        err.textContent = 'Login failed: ' + e.message;
-        err.style.display = 'block';
-    }
+    const err = document.getElementById('login-error'); err.style.display = 'none';
+    if (!email || !password) { err.textContent = 'Email and password required'; err.style.display = 'block'; return; }
+    try { await auth.signInWithEmailAndPassword(email, password); }
+    catch(e) { err.textContent = 'Login failed: ' + e.message; err.style.display = 'block'; }
 }
 async function handleLogout() { await auth.signOut(); }
 
 // ============================================
-// RENDER METRICS
+// RENDER FUNCTIONS
 // ============================================
 function renderMetrics() {
-    const total = allLeads.length;
-    const counts = {};
+    const total = allLeads.length; const counts = {};
     allSettings.statuses.forEach(s => counts[s] = allLeads.filter(l => l.status === s).length);
     const conv = total > 0 ? ((counts['Closed']/total)*100).toFixed(1) : 0;
-    const orderCount = allOrders.length;
-    const deliveredOrders = allOrders.filter(o => o.status === 'Delivered').length;
-    const rtoOrders = allOrders.filter(o => o.status === 'RTO').length;
-    
+    const delivered = allOrders.filter(o => o.status === 'Delivered').length;
+    const rto = allOrders.filter(o => o.status === 'RTO').length;
     const metrics = [
         ['📊','Total Leads',total],['🆕','New',counts['New']||0],['📞','Contacted',counts['Contacted']||0],
         ['⏰','Follow-up',counts['Follow-up']||0],['💚','Interested',counts['Interested']||0],
-        ['✅','Closed',counts['Closed']||0],['📦','Orders',orderCount],['🚚','Delivered',deliveredOrders],
-        ['↩️','RTO',rtoOrders],['👥','Team',allMembers.length],['🏢','Tenants',allTenants.length],['🎯','Conv%',conv+'%']
+        ['✅','Closed',counts['Closed']||0],['📦','Orders',allOrders.length],['🚚','Delivered',delivered],
+        ['↩️','RTO',rto],['🌿','Products',allProducts.length],['👥','Team',allMembers.length],
+        ['🏢','Tenants',allTenants.length],['🎯','Conv%',conv+'%']
     ];
-    
-    document.getElementById('metrics-bar').innerHTML = metrics.map(([icon,label,val]) => `
-        <div class="metric-card"><div style="font-size:1.3rem">${icon}</div><div class="metric-value">${val}</div><div class="metric-label">${label}</div></div>
-    `).join('');
+    document.getElementById('metrics-bar').innerHTML = metrics.map(([i,l,v]) => `<div class="metric-card"><div style="font-size:1.5rem">${i}</div><div class="metric-value">${v}</div><div class="metric-label">${l}</div></div>`).join('');
 }
 
-// ============================================
-// RENDER KANBAN
-// ============================================
 function renderKanban() {
-    const board = document.getElementById('kanban-board');
-    board.innerHTML = '';
+    const board = document.getElementById('kanban-board'); board.innerHTML = '';
+    const colors = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
     allSettings.statuses.forEach(status => {
         const leads = allLeads.filter(l => l.status === status);
-        const col = document.createElement('div');
-        col.className = 'kanban-column';
-        col.style.background = STATUS_COLORS[status] || '#e9ecef';
-        col.innerHTML = `
-            <div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
-            <div class="kanban-cards" data-status="${status}">
-                ${leads.map(l => `
-                    <div class="lead-card" draggable="true" data-id="${l.id}">
-                        <h4>${l.name}</h4>
-                        <p>📞 ${l.phone}</p>
-                        ${l.assignedToName ? `<p>👤 ${l.assignedToName}</p>` : ''}
-                        ${l.createdAt ? `<p>⏱ ${getTimeAgo(l.createdAt)}</p>` : ''}
-                        <div class="lead-card-actions">
-                            <button class="btn-call" onclick="event.stopPropagation();callLead('${l.phone}')">📞</button>
-                            <button class="btn-wa" onclick="event.stopPropagation();waLead('${l.phone}')">💬</button>
-                            <button class="btn-move" onclick="event.stopPropagation();moveLead('${l.id}','${l.status}')">➡️</button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+        const col = document.createElement('div'); col.className = 'kanban-column'; col.style.background = colors[status] || '#e9ecef';
+        col.innerHTML = `<div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
+        <div class="kanban-cards" data-status="${status}">${leads.map(l => `
+            <div class="lead-card" draggable="true" data-id="${l.id}">
+                <div class="lead-card-header">
+                    <div class="lead-card-identity"><div class="lead-card-avatar">${(l.name||'?')[0]}</div><span class="lead-card-name">${l.name}</span></div>
+                    <span class="lead-card-time">${l.createdAt?getTimeAgo(l.createdAt):''}</span>
+                </div>
+                <div class="lead-card-info"><p>📞 ${l.phone}</p>${l.assignedToName?`<p>👤 ${l.assignedToName}</p>`:''}</div>
+                <div class="lead-card-tags">${l.product?`<span class="lead-tag tag-product">🌿 ${l.product}</span>`:''}${l.priority==='Hot'?'<span class="lead-tag tag-hot">🔥 Hot</span>':''}</div>
+                <div class="lead-card-actions">
+                    <button class="btn-call" onclick="event.stopPropagation();callLead('${l.phone}')">📞</button>
+                    <button class="btn-wa" onclick="event.stopPropagation();waLead('${l.phone}')">💬</button>
+                    <button class="btn-move" onclick="event.stopPropagation();moveLead('${l.id}','${l.status}')">➡️</button>
+                </div>
+            </div>`).join('')}</div>`;
         board.appendChild(col);
     });
-    
-    // Drag & Drop
-    document.querySelectorAll('.lead-card').forEach(c => {
-        c.addEventListener('dragstart', e => e.dataTransfer.setData('leadId', c.dataset.id));
-    });
+    document.querySelectorAll('.lead-card').forEach(c => c.addEventListener('dragstart', e => e.dataTransfer.setData('leadId', c.dataset.id)));
     document.querySelectorAll('.kanban-cards').forEach(z => {
-        z.addEventListener('dragover', e => e.preventDefault());
+        z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('drag-over'); });
+        z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
         z.addEventListener('drop', async e => {
-            e.preventDefault();
-            const leadId = e.dataTransfer.getData('leadId');
-            const status = z.dataset.status;
+            e.preventDefault(); z.classList.remove('drag-over');
+            const leadId = e.dataTransfer.getData('leadId'); const status = z.dataset.status;
             await db.collection('leads').doc(leadId).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-            showToast('✅ Moved to ' + status);
-            loadAll();
+            showToast('✅ Moved to ' + status); loadAll();
         });
     });
 }
 
-// ============================================
-// RENDER TABLES
-// ============================================
 function renderLeadsTable() {
     const c = document.getElementById('leads-table');
-    if (allLeads.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">📭 No leads</div>'; return; }
-    c.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Assigned</th><th>Created</th><th>Actions</th></tr></thead>
-    <tbody>${allLeads.map(l => `
-        <tr><td><strong>${l.name}</strong></td><td>${l.phone}</td><td>${l.product||'-'}</td>
-        <td><span style="padding:3px 10px;border-radius:12px;background:${STATUS_COLORS[l.status]};font-size:.7rem">${l.status}</span></td>
-        <td>${l.assignedToName||'Unassigned'}</td><td>${l.createdAt?getTimeAgo(l.createdAt):'-'}</td>
-        <td><button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="callLead('${l.phone}')">📞</button>
-        <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="waLead('${l.phone}')">💬</button>
-        <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteLead('${l.id}')">🗑️</button></td></tr>
-    `).join('')}</tbody></table>`;
+    if (!allLeads.length) { c.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><h3>No Leads</h3><p>Click "+ Lead" to add</p></div>'; return; }
+    const colors = {'New':'#fff3cd','Contacted':'#d1ecf1','Follow-up':'#e7d9ff','Interested':'#d4edda','Closed':'#d6d8db'};
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Priority</th><th>Assigned</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody>${allLeads.map(l => `<tr><td><strong>${l.name}</strong></td><td>${l.phone}</td><td>${l.product||'-'}</td>
+    <td><span class="status-badge" style="background:${colors[l.status]||'#e9ecef'}">${l.status}</span></td>
+    <td>${l.priority||'Normal'}</td><td>${l.assignedToName||'Unassigned'}</td><td>${l.createdAt?getTimeAgo(l.createdAt):'-'}</td>
+    <td><button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="callLead('${l.phone}')">📞</button>
+    <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="waLead('${l.phone}')">💬</button>
+    <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteLead('${l.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderOrdersTable() {
     const c = document.getElementById('orders-table');
-    if (allOrders.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">📦 No orders</div>'; return; }
-    c.innerHTML = `<table><thead><tr><th>Order ID</th><th>Lead</th><th>Product</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Status</th><th>Courier</th><th>AWB</th><th>Actions</th></tr></thead>
-    <tbody>${allOrders.map(o => `
-        <tr><td><strong>${o.orderId||o.id.substring(0,8)}</strong></td><td>${o.leadName||'-'}</td><td>${o.product}</td>
-        <td>${o.qty}</td><td>₹${o.amount}</td><td>${o.paymentMethod}</td>
-        <td><span style="padding:3px 10px;border-radius:12px;background:${getOrderStatusColor(o.status)};font-size:.7rem">${o.status}</span></td>
-        <td>${o.courier||'-'}</td><td>${o.awb||'-'}</td>
-        <td>
-            <button style="background:var(--info-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="advanceOrder('${o.id}','${o.status}')">➡️</button>
-            <button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="markRTO('${o.id}')">↩️</button>
-        </td></tr>
-    `).join('')}</tbody></table>`;
+    if (!allOrders.length) { c.innerHTML = '<div class="empty-state"><span class="empty-icon">📦</span><h3>No Orders</h3></div>'; return; }
+    const colors = {'Order Placed':'#fff3cd','Confirmed':'#d1ecf1','Packed':'#e7d9ff','Dispatched':'#fff3cd','In Transit':'#d1ecf1','Out for Delivery':'#cce5ff','Delivered':'#d4edda','RTO':'#f8d7da'};
+    c.innerHTML = `<table><thead><tr><th>Order ID</th><th>Lead</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Courier</th><th>AWB</th><th>Address</th><th>Actions</th></tr></thead>
+    <tbody>${allOrders.map(o => `<tr><td><strong>${o.orderId||o.id.substring(0,8)}</strong></td><td>${o.leadName||'-'}</td><td>${o.product}</td><td>${o.qty}</td><td>₹${o.amount}</td>
+    <td><span class="status-badge" style="background:${colors[o.status]||'#e9ecef'}">${o.status}</span></td>
+    <td>${o.courier||'-'}</td><td>${o.awb||'-'}</td><td>${o.city||''} ${o.pincode||''}</td>
+    <td><button style="background:var(--info-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="advanceOrder('${o.id}','${o.status}')">➡️</button>
+    <button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="markRTO('${o.id}')">↩️</button></td></tr>`).join('')}</tbody></table>`;
+}
+
+function renderProductsTable() {
+    const c = document.getElementById('products-table');
+    c.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:15px"><h3 style="color:var(--primary)">🌿 Products (${allProducts.length})</h3>
+    <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Add</button></div>
+    <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead>
+    <tbody>${allProducts.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.category||'-'}</td><td>₹${p.price||0}</td>
+    <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteProduct('${p.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderTeamTable() {
     const c = document.getElementById('team-table');
-    if (allMembers.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">👥 No members</div>'; return; }
-    c.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>${allMembers.map(m => `
-        <tr><td><strong>${m.name||'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team||'All'}</td>
-        <td>${m.isActive !== false ? '✅' : '❌'}</td>
-        <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="removeMember('${m.id}')">🗑️</button></td></tr>
-    `).join('')}</tbody></table>`;
+    if (!allMembers.length) { c.innerHTML = '<div class="empty-state"><span class="empty-icon">👥</span><h3>No Members</h3></div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Actions</th></tr></thead>
+    <tbody>${allMembers.map(m => `<tr><td><strong>${m.name||'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team||'All'}</td>
+    <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="removeMember('${m.id}')">🗑️</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderTenantsTable() {
     const c = document.getElementById('tenants-table');
-    if (allTenants.length === 0) { c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">🏢 No tenants</div>'; return; }
-    c.innerHTML = `<table><thead><tr><th>Name</th><th>Plan</th><th>Status</th><th>Created</th></tr></thead>
-    <tbody>${allTenants.map(t => `
-        <tr><td><strong>${t.name}</strong></td><td>${t.plan||'Free'}</td><td>${t.status||'Active'}</td><td>${t.createdAt?getTimeAgo(t.createdAt):'-'}</td></tr>
-    `).join('')}</tbody></table>`;
+    if (!allTenants.length) { c.innerHTML = '<div class="empty-state"><span class="empty-icon">🏢</span><h3>No Tenants</h3></div>'; return; }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Plan</th><th>Created</th></tr></thead>
+    <tbody>${allTenants.map(t => `<tr><td><strong>${t.name}</strong></td><td>${t.plan||'Free'}</td><td>${t.createdAt?getTimeAgo(t.createdAt):'-'}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderSettings() {
-    const c = document.getElementById('settings-container');
-    c.innerHTML = `
-        <h3 style="color:var(--primary);margin-bottom:15px">⚙️ Platform Settings</h3>
-        <div class="form-group"><label>Lead Statuses (comma separated)</label>
-        <input type="text" id="settings-statuses" value="${allSettings.statuses.join(', ')}"></div>
-        <div class="form-group"><label>Products (comma separated)</label>
-        <input type="text" id="settings-products" value="${allSettings.products.join(', ')}"></div>
-        <div class="form-group"><label>Sources (comma separated)</label>
-        <input type="text" id="settings-sources" value="${allSettings.sources.join(', ')}"></div>
-        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
-    `;
+    document.getElementById('settings-statuses').value = allSettings.statuses.join(', ');
+    document.getElementById('settings-sources').value = allSettings.sources.join(', ');
+    document.getElementById('settings-priorities').value = allSettings.priorities.join(', ');
+    document.getElementById('settings-couriers').value = allSettings.couriers.join(', ');
 }
 
 // ============================================
 // HELPERS
 // ============================================
-function getTimeAgo(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return Math.floor(seconds/60)+'m';
-    if (seconds < 86400) return Math.floor(seconds/3600)+'h';
-    return Math.floor(seconds/86400)+'d';
-}
-
-function getOrderStatusColor(status) {
-    const colors = {'Order Placed':'#fff3cd','Confirmed':'#d1ecf1','Packed':'#e7d9ff','Dispatched':'#fff3cd','In Transit':'#d1ecf1','Delivered':'#d4edda','RTO':'#f8d7da'};
-    return colors[status] || '#e9ecef';
+function getTimeAgo(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const s = Math.floor((Date.now()-d.getTime())/1000);
+    if (s<60) return 'Just now'; if (s<3600) return Math.floor(s/60)+'m'; if (s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d';
 }
 
 function populateDropdowns() {
-    // Lead Product
-    const productSelect = document.getElementById('lead-product');
-    productSelect.innerHTML = '<option value="">Select</option>' + allSettings.products.map(p => `<option>${p}</option>`).join('');
-    
-    // Lead Source
-    const sourceSelect = document.getElementById('lead-source');
-    sourceSelect.innerHTML = '<option value="">Select</option>' + allSettings.sources.map(s => `<option>${s}</option>`).join('');
-    
-    // Lead Assign
-    const assignSelect = document.getElementById('lead-assign');
-    const agents = allMembers.filter(m => m.role !== 'admin');
-    assignSelect.innerHTML = '<option value="">Unassigned</option>' + agents.map(a => `<option value="${a.id}">${a.name||a.email}</option>`).join('');
-    
-    // Order Lead
-    const orderLeadSelect = document.getElementById('order-lead');
-    orderLeadSelect.innerHTML = '<option value="">Select Lead</option>' + allLeads.map(l => `<option value="${l.id}">${l.name} - ${l.phone}</option>`).join('');
-    
-    // Order Product
-    const orderProductSelect = document.getElementById('order-product');
-    orderProductSelect.innerHTML = '<option value="">Select</option>' + allSettings.products.map(p => `<option>${p}</option>`).join('');
+    document.getElementById('lead-product').innerHTML = '<option value="">Select</option>' + allProducts.map(p=>`<option>${p.name}</option>`).join('');
+    document.getElementById('lead-source').innerHTML = '<option value="">Select</option>' + allSettings.sources.map(s=>`<option>${s}</option>`).join('');
+    document.getElementById('lead-priority').innerHTML = '<option value="">Select</option>' + allSettings.priorities.map(p=>`<option>${p}</option>`).join('');
+    document.getElementById('lead-assign').innerHTML = '<option value="">Unassigned</option>' + allMembers.filter(m=>m.role!=='admin').map(a=>`<option value="${a.id}">${a.name||a.email}</option>`).join('');
+    document.getElementById('order-lead').innerHTML = '<option value="">Select Lead</option>' + allLeads.map(l=>`<option value="${l.id}">${l.name} - ${l.phone}</option>`).join('');
+    document.getElementById('order-product').innerHTML = '<option value="">Select</option>' + allProducts.map(p=>`<option>${p.name}</option>`).join('');
+    document.getElementById('order-courier').innerHTML = '<option value="">Select</option>' + allSettings.couriers.map(c=>`<option>${c}</option>`).join('');
 }
 
 // ============================================
-// LEAD MODAL
+// LEAD OPERATIONS
 // ============================================
 function openLeadModal() { document.getElementById('lead-modal').classList.add('active'); populateDropdowns(); }
 function closeLeadModal() { document.getElementById('lead-modal').classList.remove('active'); }
-
 async function saveLead() {
     const name = document.getElementById('lead-name').value.trim();
     const phone = document.getElementById('lead-phone').value.trim();
-    if (!name || !phone) { showToast('Name and phone required', 'error'); return; }
-    
+    if (!name || !phone) { showToast('Name and phone required','error'); return; }
     const assignId = document.getElementById('lead-assign').value;
-    const member = allMembers.find(m => m.id === assignId);
-    
-    await db.collection('leads').add({
-        name, phone,
-        email: document.getElementById('lead-email').value.trim(),
-        city: document.getElementById('lead-city').value.trim(),
-        product: document.getElementById('lead-product').value,
-        source: document.getElementById('lead-source').value,
-        priority: document.getElementById('lead-priority').value,
-        notes: document.getElementById('lead-notes').value.trim(),
-        status: 'New',
-        tenantId,
-        assignedTo: assignId || null,
-        assignedToName: member ? (member.name||member.email) : null,
-        createdBy: currentUser.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast('✅ Lead added');
-    closeLeadModal();
-    loadAll();
+    const member = allMembers.find(m=>m.id===assignId);
+    await db.collection('leads').add({ name, phone, email: document.getElementById('lead-email').value.trim(), city: document.getElementById('lead-city').value.trim(), product: document.getElementById('lead-product').value, source: document.getElementById('lead-source').value, priority: document.getElementById('lead-priority').value, notes: document.getElementById('lead-notes').value.trim(), status:'New', tenantId, assignedTo: assignId||null, assignedToName: member?(member.name||member.email):null, createdBy: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('✅ Lead added'); closeLeadModal(); loadAll();
 }
-
-async function deleteLead(id) {
-    if (!confirm('Delete this lead?')) return;
-    await db.collection('leads').doc(id).delete();
-    showToast('✅ Lead deleted');
-    loadAll();
-}
-
-async function moveLead(id, current) {
-    const statuses = allSettings.statuses;
-    const idx = statuses.indexOf(current);
-    const next = statuses[(idx+1) % statuses.length];
-    await db.collection('leads').doc(id).update({ status: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    showToast('✅ Moved to ' + next);
-    loadAll();
-}
+async function deleteLead(id) { if(!confirm('Delete?')) return; await db.collection('leads').doc(id).delete(); showToast('✅ Deleted'); loadAll(); }
+async function moveLead(id, current) { const idx = allSettings.statuses.indexOf(current); const next = allSettings.statuses[(idx+1)%allSettings.statuses.length]; await db.collection('leads').doc(id).update({status:next, updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); showToast('✅ '+next); loadAll(); }
 
 // ============================================
-// ORDER MODAL
+// ORDER OPERATIONS
 // ============================================
 function openOrderModal() { document.getElementById('order-modal').classList.add('active'); populateDropdowns(); }
 function closeOrderModal() { document.getElementById('order-modal').classList.remove('active'); }
-
 async function saveOrder() {
     const leadId = document.getElementById('order-lead').value;
     const product = document.getElementById('order-product').value;
     const qty = document.getElementById('order-qty').value;
     const amount = document.getElementById('order-amount').value;
     const payment = document.getElementById('order-payment').value;
-    const address = document.getElementById('order-address').value.trim();
+    const address1 = document.getElementById('order-address1').value.trim();
+    const address2 = document.getElementById('order-address2').value.trim();
+    const city = document.getElementById('order-city').value.trim();
+    const state = document.getElementById('order-state').value.trim();
+    const pincode = document.getElementById('order-pincode').value.trim();
+    const landmark = document.getElementById('order-landmark').value.trim();
     const courier = document.getElementById('order-courier').value;
-    
-    if (!leadId || !product || !qty || !amount || !address) {
-        showToast('All fields required', 'error');
-        return;
-    }
-    
-    const lead = allLeads.find(l => l.id === leadId);
-    
-    const orderData = {
-        orderId: 'ORD-' + Date.now().toString().slice(-6),
-        leadId, leadName: lead?.name, leadPhone: lead?.phone,
-        product, qty: parseInt(qty), amount: parseFloat(amount),
-        paymentMethod: payment, address, courier,
-        status: 'Order Placed',
-        tenantId,
-        awb: courier ? generateAWB(courier) : null,
-        createdBy: currentUser.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        timeline: [{ status: 'Order Placed', at: new Date().toISOString() }]
-    };
-    
-    await db.collection('orders').add(orderData);
-    
-    // Update lead status to Interested
-    if (leadId) {
-        await db.collection('leads').doc(leadId).update({ status: 'Interested', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    }
-    
-    showToast('✅ Order created');
-    closeOrderModal();
-    loadAll();
+    const warehouse = document.getElementById('order-warehouse').value;
+    if (!leadId || !product || !qty || !amount || !address1 || !city || !state || !pincode) { showToast('All required fields','error'); return; }
+    const lead = allLeads.find(l=>l.id===leadId);
+    const awb = courier ? courier.substring(0,2).toUpperCase() + Date.now().toString().slice(-10) : null;
+    await db.collection('orders').add({ orderId: 'ORD-'+Date.now().toString().slice(-6), leadId, leadName:lead?.name, leadPhone:lead?.phone, product, qty:parseInt(qty), amount:parseFloat(amount), paymentMethod:payment, address1, address2, city, state, pincode, landmark, courier, warehouse, awb, status:'Order Placed', tenantId, createdBy: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp(), timeline:[{status:'Order Placed',at:new Date().toISOString()}] });
+    if (leadId) await db.collection('leads').doc(leadId).update({status:'Interested', updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    showToast('✅ Order created'); closeOrderModal(); loadAll();
 }
-
-function generateAWB(courier) {
-    const prefix = { 'Delhivery': 'DL', 'Blue Dart': 'BD', 'DTDC': 'DT', 'India Post': 'IP', 'Ekart': 'EK', 'XpressBees': 'XB' }[courier] || 'XX';
-    return prefix + Date.now().toString().slice(-10);
-}
-
-async function advanceOrder(id, currentStatus) {
-    const idx = ORDER_STATUSES.indexOf(currentStatus);
-    if (idx === -1 || idx === ORDER_STATUSES.length - 1) return;
-    const next = ORDER_STATUSES[idx + 1];
-    
-    await db.collection('orders').doc(id).update({
-        status: next,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        timeline: firebase.firestore.FieldValue.arrayUnion({ status: next, at: new Date().toISOString() })
-    });
-    showToast('✅ Order ' + next);
-    loadAll();
-}
-
-async function markRTO(id) {
-    if (!confirm('Mark this order as RTO?')) return;
-    await db.collection('orders').doc(id).update({
-        status: 'RTO',
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        timeline: firebase.firestore.FieldValue.arrayUnion({ status: 'RTO', at: new Date().toISOString() })
-    });
-    showToast('↩️ Order marked as RTO');
-    loadAll();
-}
+async function advanceOrder(id, current) { const idx = ORDER_STATUSES.indexOf(current); if(idx===-1||idx===ORDER_STATUSES.length-1) return; const next = ORDER_STATUSES[idx+1]; await db.collection('orders').doc(id).update({status:next, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), timeline:firebase.firestore.FieldValue.arrayUnion({status:next,at:new Date().toISOString()})}); showToast('✅ '+next); loadAll(); }
+async function markRTO(id) { if(!confirm('Mark RTO?')) return; await db.collection('orders').doc(id).update({status:'RTO', updatedAt:firebase.firestore.FieldValue.serverTimestamp(), timeline:firebase.firestore.FieldValue.arrayUnion({status:'RTO',at:new Date().toISOString()})}); showToast('↩️ RTO'); loadAll(); }
 
 // ============================================
-// TEAM MODAL
+// PRODUCT OPERATIONS
+// ============================================
+function openProductModal() { document.getElementById('product-modal').classList.add('active'); }
+function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); }
+async function saveProduct() { const name = document.getElementById('product-name').value.trim(); if(!name){showToast('Name required','error');return;} await db.collection('products').add({name, category:document.getElementById('product-category').value.trim(), price:parseFloat(document.getElementById('product-price').value)||0, description:document.getElementById('product-desc').value.trim(), tenantId:tenantId||null, createdAt:firebase.firestore.FieldValue.serverTimestamp()}); showToast('✅ Product added'); closeProductModal(); loadAll(); }
+async function deleteProduct(id) { if(!confirm('Delete?')) return; await db.collection('products').doc(id).delete(); showToast('✅ Deleted'); loadAll(); }
+
+// ============================================
+// TEAM OPERATIONS
 // ============================================
 function openTeamModal() { document.getElementById('team-modal').classList.add('active'); }
 function closeTeamModal() { document.getElementById('team-modal').classList.remove('active'); }
-
 async function saveTeamMember() {
     const name = document.getElementById('team-name').value.trim();
     const email = document.getElementById('team-email').value.trim();
     const password = document.getElementById('team-password').value;
-    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
-    
+    if(!name||!email||!password){showToast('All fields required','error');return;}
     try {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-        await db.collection('users').doc(cred.user.uid).set({
-            name, email,
-            role: document.getElementById('team-role').value,
-            team: document.getElementById('team-group').value,
-            tenantId,
-            isActive: true,
-            createdBy: currentUser.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast('✅ Member added');
-        closeTeamModal();
-        loadAll();
-    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        const cred = await auth.createUserWithEmailAndPassword(email,password);
+        await db.collection('users').doc(cred.user.uid).set({name,email,role:document.getElementById('team-role').value,team:document.getElementById('team-group').value,tenantId,isActive:true,createdBy:currentUser.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        showToast('✅ Member added'); closeTeamModal(); loadAll();
+    } catch(e) { showToast('Error: '+e.message,'error'); }
 }
-
-async function removeMember(id) {
-    if (!confirm('Remove this member?')) return;
-    await db.collection('users').doc(id).update({ isActive: false });
-    showToast('✅ Member deactivated');
-    loadAll();
-}
+async function removeMember(id) { if(!confirm('Remove?')) return; await db.collection('users').doc(id).update({isActive:false}); showToast('✅ Deactivated'); loadAll(); }
 
 // ============================================
-// TENANT MODAL
+// TENANT OPERATIONS
 // ============================================
 function openTenantModal() { document.getElementById('tenant-modal').classList.add('active'); }
 function closeTenantModal() { document.getElementById('tenant-modal').classList.remove('active'); }
-
 async function saveTenant() {
     const name = document.getElementById('tenant-name').value.trim();
     const email = document.getElementById('tenant-email').value.trim();
     const password = document.getElementById('tenant-password').value;
-    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
-    
+    if(!name||!email||!password){showToast('All fields required','error');return;}
     try {
-        const tenantRef = await db.collection('tenants').add({
-            name, plan: 'Free', status: 'Active',
-            createdBy: currentUser.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-        await db.collection('users').doc(cred.user.uid).set({
-            name: name + ' Admin', email, role: 'admin', tenantId: tenantRef.id,
-            isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast('✅ Tenant created');
-        closeTenantModal();
-        loadAll();
-    } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        const tenantRef = await db.collection('tenants').add({name,plan:'Free',status:'Active',createdBy:currentUser.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        const cred = await auth.createUserWithEmailAndPassword(email,password);
+        await db.collection('users').doc(cred.user.uid).set({name:name+' Admin',email,role:'admin',tenantId:tenantRef.id,isActive:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        showToast('✅ Tenant created'); closeTenantModal(); loadAll();
+    } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 
 // ============================================
 // SETTINGS
 // ============================================
 async function saveSettings() {
-    const statuses = document.getElementById('settings-statuses').value.split(',').map(s => s.trim()).filter(Boolean);
-    const products = document.getElementById('settings-products').value.split(',').map(s => s.trim()).filter(Boolean);
-    const sources = document.getElementById('settings-sources').value.split(',').map(s => s.trim()).filter(Boolean);
-    
-    await db.collection('settings').doc('platform').set({
-        statuses, products, sources,
-        updatedBy: currentUser.uid,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    allSettings = { statuses, products, sources };
-    showToast('✅ Settings saved');
-    loadAll();
+    const statuses = document.getElementById('settings-statuses').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const sources = document.getElementById('settings-sources').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const priorities = document.getElementById('settings-priorities').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const couriers = document.getElementById('settings-couriers').value.split(',').map(s=>s.trim()).filter(Boolean);
+    await db.collection('settings').doc('platform').set({statuses,sources,priorities,couriers,updatedBy:currentUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    allSettings = {statuses,sources,priorities,couriers};
+    showToast('✅ Settings saved'); loadAll();
 }
 
 // ============================================
@@ -774,21 +1610,27 @@ function waLead(phone) { if(phone) window.open('https://wa.me/91' + phone.replac
 // TAB SWITCH
 // ============================================
 function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(tab)));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
 }
 
 // ============================================
+// FILTERS
+// ============================================
+function filterLeadsTable() { /* Implement search/filter */ }
+function filterOrdersTable() { /* Implement search/filter */ }
+
+// ============================================
 // TOAST
 // ============================================
-function showToast(msg, type = 'success') {
+function showToast(msg, type='success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
     toast.textContent = msg;
     toast.onclick = () => toast.remove();
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => { toast.style.opacity='0'; toast.style.transition='opacity .3s'; setTimeout(()=>toast.remove(),300); }, 3000);
 }
 
 // ============================================
@@ -798,7 +1640,8 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
 });
 
-console.log('✅ Aahar Shudhi Complete System Ready');
+console.log('✅ Aahar Shudhi Complete System Loaded');
+console.log('📋 Features: Multi-Tenant, Kanban, Orders, Products, Team, Settings');
 </script>
 </body>
 </html>
