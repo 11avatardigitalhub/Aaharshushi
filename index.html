@@ -2,34 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <meta name="description" content="Aahar Shudhi - Ayurvedic Lead Management System">
-    <meta name="theme-color" content="#2a5c3e">
-    <title>Aahar Shudhi - Lead Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aahar Shudhi - Lead Management</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
-    
-    <!-- Firebase SDK (Latest Stable) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    
-    <!-- SortableJS -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- CSS Files -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/kanban.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/modal.css">
-    <link rel="stylesheet" href="css/responsive.css">
     
     <style>
         * {
@@ -41,185 +20,727 @@
         
         body {
             background: #f0f4f1;
-            color: #1e3a2f;
-            line-height: 1.6;
-            overflow-x: hidden;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
         
-        #loading-screen {
+        /* Login Screen */
+        #login-screen {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        #login-screen h1 {
+            font-size: 1.5rem;
+            color: #2a5c3e;
+            margin: 15px 0 5px;
+        }
+        
+        #login-screen p {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+        }
+        
+        #login-screen .logo {
+            font-size: 3rem;
+        }
+        
+        #login-screen input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        
+        #login-screen input:focus {
+            border-color: #2a5c3e;
+            box-shadow: 0 0 0 3px rgba(42,92,62,0.1);
+        }
+        
+        #login-screen button {
+            width: 100%;
+            padding: 13px;
+            background: #2a5c3e;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #login-screen button:hover {
+            background: #3d7a54;
+        }
+        
+        #login-error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        /* Dashboard */
+        #dashboard {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #2a5c3e;
+        }
+        
+        .navbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #2a5c3e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3d7a54;
+        }
+        
+        .btn-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-danger:hover {
+            background: #f1c0c5;
+        }
+        
+        /* Kanban Board */
+        .kanban-board {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .kanban-column {
+            background: #e9ecef;
+            border-radius: 15px;
+            min-width: 260px;
+            width: 280px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+        
+        .kanban-column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .kanban-count {
+            background: #2a5c3e;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+        }
+        
+        .lead-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .lead-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .lead-card h4 {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #1e3a2f;
+        }
+        
+        .lead-card p {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .lead-card-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .lead-card-actions button {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-call {
+            background: #e3f0e5;
+            color: #1e7e34;
+        }
+        
+        .btn-whatsapp {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .btn-move {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        /* Modal */
+        #lead-modal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #f0f4f1;
-            display: flex;
-            flex-direction: column;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            z-index: 99999;
-            transition: opacity 0.5s ease;
+            padding: 20px;
         }
         
-        #loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
+        #lead-modal.active {
+            display: flex;
         }
         
-        .loading-logo {
-            font-size: 4rem;
-            animation: pulse 2s infinite;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid #2a5c3e;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-top: 20px;
-        }
-        
-        .loading-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+        .modal-content h2 {
             color: #2a5c3e;
-            margin-top: 15px;
+            margin-bottom: 20px;
         }
         
-        .loading-subtitle {
-            font-size: 0.9rem;
-            color: #6c757d;
+        .modal-content label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            color: #495057;
         }
         
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            outline: none;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .modal-content input:focus,
+        .modal-content select:focus,
+        .modal-content textarea:focus {
+            border-color: #2a5c3e;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
         }
         
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
         }
         
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            z-index: 2000;
+            display: none;
+            animation: slideIn 0.3s ease;
         }
         
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-        <div class="loading-logo">🌿</div>
-        <div class="loading-title">Aahar Shudhi</div>
-        <div class="loading-subtitle">Lead Management System</div>
-        <div class="loading-spinner"></div>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="logo">🌿</div>
+        <h1>Aahar Shudhi</h1>
+        <p>Lead Management System</p>
+        <div id="login-error"></div>
+        <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+        <button onclick="handleLogin()">🔐 Sign In</button>
     </div>
 
-    <!-- Main Container -->
-    <div id="main-container"></div>
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <span>🌿</span> Aahar Shudhi
+            </div>
+            <div class="navbar-actions">
+                <button class="btn btn-primary" onclick="openLeadModal()">+ Add Lead</button>
+                <button class="btn btn-danger" onclick="handleLogout()">🚪 Logout</button>
+            </div>
+        </nav>
+        
+        <div class="kanban-board" id="kanban-board">
+            <!-- Columns will be rendered here -->
+        </div>
+    </div>
 
-    <!-- Config Files -->
-    <script src="js/config/constants.js"></script>
-    <script src="js/config/firebase-config.js"></script>
-    
-    <!-- Services -->
-    <script src="js/services/auth-service.js"></script>
-    <script src="js/services/lead-service.js"></script>
-    <script src="js/services/status-service.js"></script>
-    <script src="js/services/kanban-service.js"></script>
-    <script src="js/services/note-service.js"></script>
-    <script src="js/services/followup-service.js"></script>
-    <script src="js/services/dashboard-service.js"></script>
-    <script src="js/services/realtime-service.js"></script>
-    <script src="js/services/filter-service.js"></script>
-    
-    <!-- Components -->
-    <script src="js/components/toast.js"></script>
-    <script src="js/components/lead-card.js"></script>
-    <script src="js/components/kanban-board.js"></script>
-    <script src="js/components/lead-modal.js"></script>
-    <script src="js/components/metrics-bar.js"></script>
-    
-    <!-- Main App -->
-    <script src="js/app.js"></script>
+    <!-- LEAD MODAL -->
+    <div id="lead-modal">
+        <div class="modal-content">
+            <h2>🌿 Add New Lead</h2>
+            <label>Full Name *</label>
+            <input type="text" id="lead-name" placeholder="Customer name">
+            
+            <label>Phone Number *</label>
+            <input type="tel" id="lead-phone" placeholder="10-digit mobile">
+            
+            <label>Product</label>
+            <select id="lead-product">
+                <option>Chyawanprash</option>
+                <option>Ashwagandha</option>
+                <option>Triphala</option>
+                <option>Giloy Juice</option>
+                <option>Brahmi</option>
+                <option>Other</option>
+            </select>
+            
+            <label>City</label>
+            <input type="text" id="lead-city" placeholder="City">
+            
+            <label>Notes</label>
+            <textarea id="lead-notes" rows="3" placeholder="Additional notes..."></textarea>
+            
+            <div class="modal-actions">
+                <button style="background:#f8f9fa;color:#495057;" onclick="closeLeadModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveLead()">💾 Save Lead</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
 
     <script>
         // ============================================
-        // CONSOLE WARNING SUPPRESSION
+        // FIREBASE CONFIGURATION
         // ============================================
         
-        // Suppress Permissions Policy violations
-        const originalWarn = console.warn;
-        console.warn = function(...args) {
-            if (args[0] && (
-                args[0].includes('unload is not allowed') ||
-                args[0].includes('Permissions policy')
-            )) {
-                return; // Skip this warning
-            }
-            originalWarn.apply(console, args);
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
+            authDomain: "avatar-wa-dual-crm.firebaseapp.com",
+            projectId: "avatar-wa-dual-crm",
+            storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
+            messagingSenderId: "946959261009",
+            appId: "1:946959261009:web:3ae08845917ac8cff8c770"
         };
         
-        const originalError = console.error;
-        console.error = function(...args) {
-            if (args[0] && (
-                args[0].includes('Permissions policy') ||
-                args[0].includes('unload is not allowed')
-            )) {
-                return; // Skip this error
-            }
-            originalError.apply(console, args);
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        console.log('✅ Firebase initialized');
+        
+        // ============================================
+        // STATUSES
+        // ============================================
+        
+        const STATUSES = ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'];
+        
+        const STATUS_COLORS = {
+            'New': '#fff3cd',
+            'Contacted': '#d1ecf1',
+            'Follow-up': '#e7d9ff',
+            'Interested': '#d4edda',
+            'Closed': '#d6d8db'
         };
         
         // ============================================
-        // LOADING SCREEN MANAGEMENT
+        // AUTH STATE
         // ============================================
         
-        document.addEventListener('app-ready', () => {
-            document.getElementById('loading-screen').classList.add('hidden');
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('✅ Logged in as:', user.email);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadLeads();
+            } else {
+                console.log('👤 Not logged in');
+                document.getElementById('login-screen').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'none';
+            }
         });
         
-        setTimeout(() => {
-            document.getElementById('loading-screen').classList.add('hidden');
-        }, 10000);
-        
         // ============================================
-        // BEFORE UNLOAD HANDLER (Fix for unload warning)
+        // LOGIN
         // ============================================
         
-        window.addEventListener('beforeunload', (e) => {
-            // Don't prevent default, just clean up
-            console.log('👋 Page unloading...');
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
             
-            // Clear any intervals
-            if (window.autoSaveTimer) {
-                clearInterval(window.autoSaveTimer);
+            errorDiv.style.display = 'none';
+            
+            if (!email || !password) {
+                showError('Email and password required');
+                return;
             }
             
-            // Don't return anything to avoid blocking
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                console.log('✅ Login successful');
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                showError(getAuthErrorMessage(error.code));
+            }
+        }
+        
+        function getAuthErrorMessage(code) {
+            const messages = {
+                'auth/invalid-email': 'Invalid email address',
+                'auth/user-not-found': 'No account found with this email',
+                'auth/wrong-password': 'Incorrect password',
+                'auth/invalid-credential': 'Invalid email or password',
+                'auth/too-many-requests': 'Too many attempts. Try later',
+                'auth/network-request-failed': 'Network error'
+            };
+            return messages[code] || 'Login failed. Try again.';
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+        
+        // ============================================
+        // LOGOUT
+        // ============================================
+        
+        async function handleLogout() {
+            await auth.signOut();
+        }
+        
+        // ============================================
+        // LOAD LEADS
+        // ============================================
+        
+        async function loadLeads() {
+            const board = document.getElementById('kanban-board');
+            board.innerHTML = '';
+            
+            // Create columns
+            STATUSES.forEach(status => {
+                const column = document.createElement('div');
+                column.className = 'kanban-column';
+                column.style.background = STATUS_COLORS[status];
+                column.innerHTML = `
+                    <div class="kanban-column-header">
+                        <span>${status}</span>
+                        <span class="kanban-count" id="count-${status}">0</span>
+                    </div>
+                    <div id="column-${status}"></div>
+                `;
+                board.appendChild(column);
+            });
+            
+            // Load leads from Firestore
+            try {
+                const snapshot = await db.collection('leads').get();
+                
+                snapshot.forEach(doc => {
+                    const lead = doc.data();
+                    lead.id = doc.id;
+                    
+                    const column = document.getElementById(`column-${lead.status || 'New'}`);
+                    
+                    if (column) {
+                        column.appendChild(createLeadCard(lead));
+                    }
+                });
+                
+                // Update counts
+                STATUSES.forEach(status => {
+                    const count = document.querySelectorAll(`#column-${status} .lead-card`).length;
+                    document.getElementById(`count-${status}`).textContent = count;
+                });
+                
+                console.log('✅ Leads loaded');
+            } catch (error) {
+                console.error('❌ Error loading leads:', error);
+                showToast('Error loading leads: ' + error.message, 'error');
+            }
+        }
+        
+        // ============================================
+        // CREATE LEAD CARD
+        // ============================================
+        
+        function createLeadCard(lead) {
+            const card = document.createElement('div');
+            card.className = 'lead-card';
+            card.draggable = true;
+            card.dataset.leadId = lead.id;
+            
+            card.innerHTML = `
+                <h4>${lead.name || 'Unknown'}</h4>
+                <p>📞 ${lead.phone || 'N/A'}</p>
+                ${lead.city ? `<p>📍 ${lead.city}</p>` : ''}
+                <p>🌿 ${lead.product || 'Other'}</p>
+                <div class="lead-card-actions">
+                    <button class="btn-call" onclick="callLead('${lead.phone}')">📞 Call</button>
+                    <button class="btn-whatsapp" onclick="whatsappLead('${lead.phone}')">💬 WA</button>
+                    <button class="btn-move" onclick="moveLead('${lead.id}', '${lead.status}')">➡️ Move</button>
+                </div>
+            `;
+            
+            // Drag & Drop
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('leadId', lead.id);
+                card.style.opacity = '0.5';
+            });
+            
+            card.addEventListener('dragend', () => {
+                card.style.opacity = '1';
+            });
+            
+            return card;
+        }
+        
+        // ============================================
+        // DRAG & DROP
+        // ============================================
+        
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
         });
         
-        console.log('✅ Index HTML Loaded');
+        document.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            
+            const leadId = e.dataTransfer.getData('leadId');
+            const targetColumn = e.target.closest('.kanban-column');
+            
+            if (leadId && targetColumn) {
+                const columnDiv = targetColumn.querySelector('[id^="column-"]');
+                const newStatus = columnDiv.id.replace('column-', '');
+                
+                try {
+                    await db.collection('leads').doc(leadId).update({
+                        status: newStatus,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    showToast(`✅ Lead moved to ${newStatus}`);
+                    loadLeads();
+                } catch (error) {
+                    console.error('❌ Move error:', error);
+                    showToast('Error moving lead', 'error');
+                }
+            }
+        });
+        
+        // ============================================
+        // QUICK ACTIONS
+        // ============================================
+        
+        function callLead(phone) {
+            if (phone) {
+                window.location.href = `tel:+91${phone}`;
+            }
+        }
+        
+        function whatsappLead(phone) {
+            if (phone) {
+                window.open(`https://wa.me/91${phone}`, '_blank');
+            }
+        }
+        
+        async function moveLead(leadId, currentStatus) {
+            const currentIndex = STATUSES.indexOf(currentStatus);
+            const nextIndex = (currentIndex + 1) % STATUSES.length;
+            const nextStatus = STATUSES[nextIndex];
+            
+            try {
+                await db.collection('leads').doc(leadId).update({
+                    status: nextStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showToast(`✅ Moved to ${nextStatus}`);
+                loadLeads();
+            } catch (error) {
+                console.error('❌ Move error:', error);
+                showToast('Error moving lead', 'error');
+            }
+        }
+        
+        // ============================================
+        // LEAD MODAL
+        // ============================================
+        
+        function openLeadModal() {
+            document.getElementById('lead-modal').classList.add('active');
+        }
+        
+        function closeLeadModal() {
+            document.getElementById('lead-modal').classList.remove('active');
+            document.getElementById('lead-name').value = '';
+            document.getElementById('lead-phone').value = '';
+            document.getElementById('lead-city').value = '';
+            document.getElementById('lead-notes').value = '';
+        }
+        
+        async function saveLead() {
+            const name = document.getElementById('lead-name').value.trim();
+            const phone = document.getElementById('lead-phone').value.trim();
+            const product = document.getElementById('lead-product').value;
+            const city = document.getElementById('lead-city').value.trim();
+            const notes = document.getElementById('lead-notes').value.trim();
+            
+            if (!name || !phone) {
+                showToast('Name and phone required', 'error');
+                return;
+            }
+            
+            try {
+                await db.collection('leads').add({
+                    name: name,
+                    phone: phone,
+                    product: product,
+                    city: city,
+                    notes: notes,
+                    status: 'New',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showToast('✅ Lead added successfully');
+                closeLeadModal();
+                loadLeads();
+            } catch (error) {
+                console.error('❌ Save error:', error);
+                showToast('Error saving lead: ' + error.message, 'error');
+            }
+        }
+        
+        // ============================================
+        // TOAST
+        // ============================================
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = type === 'error' ? '#dc3545' : '#2a5c3e';
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Close modal on outside click
+        document.getElementById('lead-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('lead-modal')) {
+                closeLeadModal();
+            }
+        });
+        
+        console.log('✅ System Ready');
     </script>
 </body>
 </html>
