@@ -1,13 +1,13 @@
 /**
  * ============================================================
- * AAHAR SHUDHI - AUTH SERVICE (COMPLETE WITH FIXES)
+ * AAHAR SHUDHI - AUTH SERVICE (COMPLETE FULL CODE)
  * ============================================================
- * @description Authentication service with all methods
- * @version 2.0.0 - Fixed Version
+ * @description Complete authentication service with all methods
+ * @version 3.0.0 - Working Version
  * ============================================================
  */
 
-class AuthService {
+class AuthServiceClass {
     constructor() {
         this.currentUser = null;
         this.userProfile = null;
@@ -15,6 +15,8 @@ class AuthService {
         this.isAuthenticated = false;
         this.isLoading = true;
         this.initializationError = null;
+        this.auth = null;
+        this.db = null;
         
         this.listeners = {
             onAuthStateChanged: [],
@@ -35,11 +37,18 @@ class AuthService {
     async _initialize() {
         try {
             if (typeof FirebaseCore === 'undefined') {
-                throw new Error('FirebaseCore not loaded');
+                console.warn('⚠️ FirebaseCore not ready, waiting...');
+                setTimeout(() => this._initialize(), 500);
+                return;
             }
             
             this.auth = FirebaseCore.getAuth();
             this.db = FirebaseCore.getDb();
+            
+            if (!this.auth) {
+                console.error('❌ Auth not available');
+                return;
+            }
             
             this._setupAuthStateListener();
             
@@ -83,7 +92,7 @@ class AuthService {
     }
     
     // ============================================
-    // USER PROFILE MANAGEMENT
+    // USER PROFILE
     // ============================================
     
     async _loadUserProfile(userId) {
@@ -107,9 +116,10 @@ class AuthService {
                     profileComplete: false
                 };
                 
-                // Create default profile
                 await this.db.collection('users').doc(userId).set(this.userProfile);
             }
+            
+            console.log('✅ User profile loaded:', this.userProfile.role);
         } catch (error) {
             console.warn('⚠️ Profile loading failed:', error.message);
             this.userProfile = null;
@@ -134,6 +144,8 @@ class AuthService {
             
             const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
             
+            console.log('✅ Login successful:', userCredential.user.email);
+            
             return {
                 success: true,
                 user: userCredential.user,
@@ -143,13 +155,15 @@ class AuthService {
             console.error('❌ Login failed:', error);
             return {
                 success: false,
-                message: FirebaseErrorHandler.authMessage(error.code)
+                message: FirebaseErrorHandler?.authMessage(error.code) || error.message
             };
         }
     }
     
     async loginWithGoogle() {
         try {
+            if (!this.auth) throw new Error('Auth not initialized');
+            
             const provider = new firebase.auth.GoogleAuthProvider();
             const userCredential = await this.auth.signInWithPopup(provider);
             
@@ -162,13 +176,15 @@ class AuthService {
             console.error('❌ Google login failed:', error);
             return {
                 success: false,
-                message: FirebaseErrorHandler.authMessage(error.code)
+                message: error.message
             };
         }
     }
     
     async registerUser(userData) {
         try {
+            if (!this.auth || !this.db) throw new Error('Services not initialized');
+            
             const userCredential = await this.auth.createUserWithEmailAndPassword(
                 userData.email,
                 userData.password
@@ -185,11 +201,15 @@ class AuthService {
                 team: userData.team || '',
                 region: userData.region || '',
                 isActive: true,
+                isOnline: true,
                 createdAt: FirebaseCore.getServerTimestamp(),
-                updatedAt: FirebaseCore.getServerTimestamp()
+                updatedAt: FirebaseCore.getServerTimestamp(),
+                lastLogin: FirebaseCore.getServerTimestamp()
             };
             
             await this.db.collection('users').doc(user.uid).set(profile);
+            
+            console.log('✅ User registered:', user.email);
             
             return {
                 success: true,
@@ -201,7 +221,7 @@ class AuthService {
             console.error('❌ Registration failed:', error);
             return {
                 success: false,
-                message: FirebaseErrorHandler.authMessage(error.code)
+                message: FirebaseErrorHandler?.authMessage(error.code) || error.message
             };
         }
     }
@@ -215,6 +235,8 @@ class AuthService {
             if (this.auth) {
                 await this.auth.signOut();
             }
+            
+            console.log('✅ Logout successful');
             
             return {
                 success: true,
@@ -235,7 +257,10 @@ class AuthService {
     
     async sendPasswordReset(email) {
         try {
+            if (!this.auth) throw new Error('Auth not initialized');
+            
             await this.auth.sendPasswordResetEmail(email);
+            
             return {
                 success: true,
                 message: 'Password reset email sent'
@@ -243,7 +268,7 @@ class AuthService {
         } catch (error) {
             return {
                 success: false,
-                message: FirebaseErrorHandler.authMessage(error.code)
+                message: error.message
             };
         }
     }
@@ -252,9 +277,7 @@ class AuthService {
         try {
             const user = this.currentUser;
             
-            if (!user) {
-                throw new Error('User not authenticated');
-            }
+            if (!user) throw new Error('User not authenticated');
             
             const credential = firebase.auth.EmailAuthProvider.credential(
                 user.email,
@@ -266,12 +289,12 @@ class AuthService {
             
             return {
                 success: true,
-                message: 'Password changed successfully'
+                message: 'Password changed'
             };
         } catch (error) {
             return {
                 success: false,
-                message: FirebaseErrorHandler.authMessage(error.code)
+                message: error.message
             };
         }
     }
@@ -283,10 +306,7 @@ class AuthService {
     async updateProfile(updateData) {
         try {
             const user = this.currentUser;
-            
-            if (!user) {
-                throw new Error('User not authenticated');
-            }
+            if (!user) throw new Error('Not authenticated');
             
             if (updateData.name) {
                 await user.updateProfile({ displayName: updateData.name });
@@ -299,12 +319,9 @@ class AuthService {
             
             await this._loadUserProfile(user.uid);
             
-            this._notifyListeners('onProfileUpdated', this.userProfile);
-            
             return {
                 success: true,
-                profile: this.userProfile,
-                message: 'Profile updated'
+                profile: this.userProfile
             };
         } catch (error) {
             return {
@@ -315,90 +332,51 @@ class AuthService {
     }
     
     // ============================================
-    // PERMISSION HELPERS
+    // PERMISSION METHODS
     // ============================================
     
     hasPermission(permission) {
         if (!this.userProfile) return false;
-        
         const role = this.userProfile.role || 'agent';
         const permissions = USER_ROLES?.PERMISSIONS?.[role] || {};
-        
         return permissions[permission] === true;
     }
     
     hasRole(roles) {
         if (!this.userProfile) return false;
-        
         const userRole = this.userProfile.role;
-        
-        if (Array.isArray(roles)) {
-            return roles.includes(userRole);
-        }
-        
+        if (Array.isArray(roles)) return roles.includes(userRole);
         return userRole === roles;
     }
     
-    isAdmin() {
-        return this.hasRole('admin');
-    }
-    
-    isTeamLead() {
-        return this.hasRole('team_lead');
-    }
-    
-    isAgent() {
-        return this.hasRole('agent');
-    }
+    isAdmin() { return this.hasRole('admin'); }
+    isTeamLead() { return this.hasRole('team_lead'); }
+    isAgent() { return this.hasRole('agent'); }
     
     // ============================================
-    // GETTER METHODS (FIXED)
+    // GETTER METHODS
     // ============================================
     
-    /**
-     * Get current user
-     * @returns {Object|null} Current user
-     */
     getCurrentUser() {
         return this.currentUser;
     }
     
-    /**
-     * Get current user ID
-     * @returns {string|null} User ID
-     */
     getUserId() {
         return this.currentUser ? this.currentUser.uid : null;
     }
     
-    /**
-     * Get user profile
-     * @returns {Object|null} User profile
-     */
     getUserProfile() {
         return this.userProfile;
     }
     
-    /**
-     * Get user role
-     * @returns {string} User role
-     */
     getUserRole() {
         return this.userProfile?.role || 'agent';
     }
     
-    /**
-     * Check if authenticated (instance method)
-     * @returns {boolean} Is authenticated
-     */
     isAuthenticated() {
         return this.isAuthenticated;
     }
     
-    /**
-     * Check if loading
-     * @returns {boolean} Is loading
-     */
     isLoading() {
         return this.isLoading;
     }
@@ -416,10 +394,8 @@ class AuthService {
     _notifyListeners(event, data) {
         if (this.listeners[event]) {
             this.listeners[event].forEach(callback => {
-                try {
-                    callback(data);
-                } catch (error) {
-                    console.error(`Error in ${event} listener:`, error);
+                try { callback(data); } catch (error) {
+                    console.error(`Listener error:`, error);
                 }
             });
         }
@@ -430,22 +406,23 @@ class AuthService {
 // SINGLETON INSTANCE
 // ============================================
 
-const AuthService = new AuthService();
+const AuthServiceInstance = new AuthServiceClass();
 
 // ============================================
 // GLOBAL EXPORT
 // ============================================
 
-window.AuthService = AuthService;
+window.AuthService = AuthServiceInstance;
+window.AuthServiceClass = AuthServiceClass;
 
-// Global helpers
-window.getCurrentUser = () => AuthService.getCurrentUser();
-window.getCurrentUserId = () => AuthService.getUserId();
-window.getUserRole = () => AuthService.getUserRole();
-window.isAdmin = () => AuthService.isAdmin();
-window.isTeamLead = () => AuthService.isTeamLead();
-window.isAgent = () => AuthService.isAgent();
-window.hasPermission = (perm) => AuthService.hasPermission(perm);
+// Global helper functions
+window.getCurrentUser = () => AuthServiceInstance.getCurrentUser();
+window.getCurrentUserId = () => AuthServiceInstance.getUserId();
+window.getUserRole = () => AuthServiceInstance.getUserRole();
+window.isAdmin = () => AuthServiceInstance.isAdmin();
+window.isTeamLead = () => AuthServiceInstance.isTeamLead();
+window.isAgent = () => AuthServiceInstance.isAgent();
+window.hasPermission = (perm) => AuthServiceInstance.hasPermission(perm);
 
 console.log('✅ Auth Service Loaded');
-console.log('📋 Methods: loginUser, logoutUser, registerUser, getUserId, isAuthenticated');
+console.log('📋 Methods available: loginUser, logoutUser, registerUser, getUserId, isAuthenticated, getCurrentUser, getUserProfile');
