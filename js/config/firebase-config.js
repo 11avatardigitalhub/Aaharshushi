@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * AAHAR SHUDHI - FIREBASE CONFIG (FIXED - No Unload Issues)
+ * AAHAR SHUDHI - FIREBASE CONFIG (COMPLETE FIXED)
  * ============================================================
  */
 
@@ -14,7 +14,7 @@ const firebaseConfig = {
     appId: "1:946959261009:web:3ae08845917ac8cff8c770"
 };
 
-// Initialize Firebase (check first)
+// Initialize Firebase
 if (typeof firebase !== 'undefined') {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -24,17 +24,6 @@ if (typeof firebase !== 'undefined') {
     // Get services
     const db = firebase.firestore();
     const auth = firebase.auth();
-    
-    // Disable persistence to avoid unload issues (optional)
-    // db.settings({ persistence: false });
-    
-    // Enable offline persistence (with error handling)
-    db.enablePersistence()
-        .then(() => console.log('✅ Offline persistence enabled'))
-        .catch((error) => {
-            console.warn('⚠️ Offline persistence:', error.code);
-            // Continue without persistence
-        });
     
     // Collections
     const collections = {
@@ -66,9 +55,7 @@ if (typeof firebase !== 'undefined') {
         getCurrentUserId() { return auth.currentUser ? auth.currentUser.uid : null; },
         isAuthenticated() { return auth.currentUser !== null; },
         
-        async initialize() {
-            return true;
-        }
+        async initialize() { return true; }
     };
     
     // Global Export
