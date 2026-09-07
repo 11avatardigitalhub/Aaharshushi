@@ -12,810 +12,48 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
-    <style>
-        /* ============================================
-           DESIGN TOKENS
-           ============================================ */
-        :root {
-            --primary: #2a5c3e;
-            --primary-light: #3d7a54;
-            --primary-dark: #1d4630;
-            --primary-bg: #e3f0e5;
-            --white: #ffffff;
-            --bg-main: #f0f4f1;
-            --text-dark: #1e3a2f;
-            --text-muted: #6c757d;
-            --border: #dee2e6;
-            --danger: #dc3545;
-            --danger-bg: #f8d7da;
-            --success: #28a745;
-            --success-bg: #d4edda;
-            --warning: #ffc107;
-            --warning-bg: #fff3cd;
-            --info: #17a2b8;
-            --info-bg: #d1ecf1;
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --radius-full: 9999px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
-            --shadow-xl: 0 12px 36px rgba(0,0,0,0.12);
-            --transition-fast: 0.15s ease;
-            --transition-base: 0.3s cubic-bezier(0.34,1.56,0.64,1);
-            --transition-slow: 0.5s cubic-bezier(0.16,1,0.3,1);
-        }
-        
-        /* ============================================
-           BASE STYLES
-           ============================================ */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        }
-        
-        body {
-            background: var(--bg-main);
-            color: var(--text-dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #e0e0e0; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
-        
-        /* ============================================
-           ANIMATIONS
-           ============================================ */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-        @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
-        
-        /* ============================================
-           LOGIN SCREEN
-           ============================================ */
-        #login-screen {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: linear-gradient(135deg, #f0f4f1 0%, #e3f0e5 50%, #d4edda 100%);
-        }
-        
-        .login-box {
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: var(--shadow-xl);
-            text-align: center;
-            animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1);
-        }
-        
-        .login-logo {
-            font-size: 3.5rem;
-            animation: pulse 2s infinite;
-            display: block;
-        }
-        
-        .login-box h1 {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin: 15px 0 5px;
-            font-weight: 700;
-        }
-        
-        .login-box .subtitle {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 30px;
-        }
-        
-        .login-box input {
-            width: 100%;
-            padding: 13px 15px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-            outline: none;
-            transition: all var(--transition-fast);
-            background: #fafafa;
-            font-family: inherit;
-        }
-        
-        .login-box input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(42,92,62,0.1);
-            background: var(--white);
-        }
-        
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary);
-            color: var(--white);
-            border: none;
-            border-radius: var(--radius-full);
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all var(--transition-base);
-            font-family: inherit;
-        }
-        
-        .btn-login:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .btn-login:active { transform: scale(0.97); }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        #login-error {
-            background: var(--danger-bg);
-            color: #721c24;
-            padding: 12px;
-            border-radius: var(--radius-md);
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-            display: none;
-            animation: shake 0.5s ease;
-        }
-        
-        .login-hint {
-            margin-top: 20px;
-            font-size: 0.72rem;
-            color: var(--text-muted);
-        }
-        
-        /* ============================================
-           DASHBOARD
-           ============================================ */
-        #dashboard {
-            display: none;
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        /* ============================================
-           NAVBAR
-           ============================================ */
-        .navbar {
-            background: var(--white);
-            padding: 15px 20px;
-            border-radius: var(--radius-lg);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-        }
-        
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--primary);
-        }
-        
-        .navbar-brand .brand-icon { font-size: 1.5rem; }
-        
-        .navbar-tenant {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            background: var(--primary-bg);
-            padding: 6px 14px;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-        }
-        
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        .navbar-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: var(--radius-full);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all var(--transition-base);
-            white-space: nowrap;
-            font-family: inherit;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-        .btn:active { transform: scale(0.95); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-light); }
-        .btn-danger { background: var(--danger-bg); color: #721c24; }
-        .btn-outline { background: white; border: 1px solid var(--primary); color: var(--primary); }
-        
-        /* ============================================
-           TABS
-           ============================================ */
-        .tabs {
-            display: flex;
-            gap: 5px;
-            background: var(--white);
-            padding: 8px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 20px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .tab-btn {
-            padding: 10px 18px;
-            border: none;
-            background: transparent;
-            border-radius: var(--radius-full);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            color: var(--text-muted);
-            transition: all var(--transition-base);
-            font-family: inherit;
-        }
-        
-        .tab-btn:hover:not(.active) { background: var(--primary-bg); }
-        .tab-btn.active { background: var(--primary); color: white; }
-        
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        
-        /* ============================================
-           METRICS BAR
-           ============================================ */
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .metric-card {
-            background: var(--white);
-            padding: 18px 15px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            text-align: center;
-            cursor: pointer;
-            transition: all var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--primary);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .metric-card:hover::before { opacity: 1; }
-        .metric-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-        .metric-icon { font-size: 1.5rem; display: block; margin-bottom: 5px; }
-        .metric-value { font-size: 1.6rem; font-weight: 700; color: var(--primary); line-height: 1.2; }
-        .metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.3px; }
-        
-        /* ============================================
-           KANBAN BOARD
-           ============================================ */
-        .kanban-board {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 10px 0 20px;
-            scroll-snap-type: x proximity;
-        }
-        
-        .kanban-column {
-            background: #e9ecef;
-            border-radius: var(--radius-lg);
-            min-width: 260px;
-            width: 280px;
-            padding: 15px;
-            flex-shrink: 0;
-            scroll-snap-align: start;
-            max-height: 65vh;
-            display: flex;
-            flex-direction: column;
-            transition: all var(--transition-base);
-        }
-        
-        .kanban-column:hover { box-shadow: var(--shadow-md); }
-        
-        .kanban-column-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            background: rgba(255,255,255,0.9);
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-        
-        .kanban-count {
-            background: var(--primary);
-            color: white;
-            padding: 2px 10px;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            font-weight: 700;
-        }
-        
-        .kanban-cards {
-            flex: 1;
-            overflow-y: auto;
-            min-height: 100px;
-            padding: 2px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .kanban-cards.drag-over {
-            background: rgba(42,92,62,0.08);
-            border-radius: var(--radius-md);
-        }
-        
-        /* ============================================
-           LEAD CARD
-           ============================================ */
-        .lead-card {
-            background: var(--white);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            box-shadow: var(--shadow-sm);
-            cursor: grab;
-            transition: all var(--transition-base);
-            user-select: none;
-            position: relative;
-        }
-        
-        .lead-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-3px);
-        }
-        
-        .lead-card:active { cursor: grabbing; }
-        .lead-card.dragging { opacity: 0.5; transform: scale(0.95); }
-        
-        .lead-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-        
-        .lead-card-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        
-        .lead-card-name {
-            font-weight: 700;
-            font-size: 0.85rem;
-            flex: 1;
-            margin-left: 8px;
-        }
-        
-        .lead-card-time {
-            font-size: 10px;
-            color: var(--text-muted);
-        }
-        
-        .lead-card-info {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            margin-bottom: 8px;
-        }
-        
-        .lead-card-info p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .lead-card-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .lead-tag {
-            padding: 2px 8px;
-            border-radius: var(--radius-full);
-            font-size: 0.62rem;
-            font-weight: 600;
-        }
-        
-        .tag-product { background: var(--primary-bg); color: var(--primary); }
-        .tag-hot { background: var(--warning-bg); color: #856404; }
-        .tag-source { background: #f8f9fa; color: var(--text-muted); }
-        
-        .lead-card-actions {
-            display: flex;
-            gap: 4px;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #f0f0f0;
-        }
-        
-        .lead-card-actions button {
-            flex: 1;
-            padding: 6px 4px;
-            border: none;
-            border-radius: var(--radius-full);
-            cursor: pointer;
-            font-size: 0.65rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-        
-        .lead-card-actions button:active { transform: scale(0.9); }
-        .btn-call { background: #e3f0e5; color: #1e7e34; }
-        .btn-wa { background: #d4edda; color: #155724; }
-        .btn-note { background: var(--warning-bg); color: #856404; }
-        .btn-move { background: var(--info-bg); color: #0c5460; }
-        
-        /* ============================================
-           LEADS TABLE
-           ============================================ */
-        .table-container {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            overflow-x: auto;
-            padding: 15px;
-        }
-        
-        .table-toolbar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .table-toolbar input, .table-toolbar select {
-            padding: 8px 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-full);
-            font-size: 0.8rem;
-            font-family: inherit;
-            outline: none;
-        }
-        
-        .table-toolbar input:focus, .table-toolbar select:focus {
-            border-color: var(--primary);
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-        }
-        
-        th {
-            background: #f8f9fa;
-            color: var(--primary);
-            font-weight: 700;
-            padding: 12px 10px;
-            text-align: left;
-            border-bottom: 2px solid var(--border);
-            white-space: nowrap;
-            position: sticky;
-            top: 0;
-        }
-        
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: middle;
-        }
-        
-        tr:hover { background: #f8f9fa; }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        /* ============================================
-           MODAL
-           ============================================ */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
-        
-        .modal-content {
-            background: var(--white);
-            border-radius: var(--radius-xl);
-            padding: 30px;
-            width: 100%;
-            max-width: 550px;
-            max-height: 85vh;
-            overflow-y: auto;
-            animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        
-        .modal-close {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: #f8f9fa;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-        }
-        
-        .modal-close:hover {
-            background: var(--danger-bg);
-            color: var(--danger);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.78rem;
-            margin-bottom: 5px;
-            color: #495057;
-        }
-        
-        .form-group label .required { color: var(--danger); }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            font-size: 0.85rem;
-            outline: none;
-            font-family: inherit;
-            transition: all var(--transition-fast);
-            background: #fafafa;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(42,92,62,0.1);
-            background: white;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .modal-actions button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: var(--radius-full);
-            cursor: pointer;
-            font-weight: 600;
-            font-family: inherit;
-            font-size: 0.85rem;
-        }
-        
-        /* ============================================
-           TOAST
-           ============================================ */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 350px;
-        }
-        
-        .toast {
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            color: white;
-            font-weight: 600;
-            font-size: 0.8rem;
-            box-shadow: var(--shadow-lg);
-            cursor: pointer;
-            animation: slideInRight 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .toast-success { background: var(--primary); }
-        .toast-error { background: var(--danger); }
-        .toast-warning { background: var(--warning); color: var(--text-dark); }
-        
-        /* ============================================
-           LOADING SPINNER
-           ============================================ */
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        /* ============================================
-           RESPONSIVE
-           ============================================ */
-        @media (max-width: 768px) {
-            #dashboard { padding: 10px; }
-            .navbar { padding: 12px; }
-            .metrics-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .kanban-column { min-width: 220px; width: 240px; }
-            .modal-content { padding: 20px; }
-            .form-row { grid-template-columns: 1fr; }
-            .btn { padding: 8px 12px; font-size: 0.7rem; }
-            .tab-btn { padding: 8px 12px; font-size: 0.7rem; }
-        }
-        
-        @media (max-width: 480px) {
-            .metrics-bar { grid-template-columns: 1fr 1fr; }
-            .metric-value { font-size: 1.2rem; }
-            .navbar-brand { font-size: 1rem; }
-        }
-    </style>
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ============================================
-    LOGIN SCREEN
-    ============================================ -->
+    <!-- ============ LOGIN SCREEN ============ -->
     <div id="login-screen">
         <div class="login-box">
             <span class="login-logo">🌿</span>
             <h1>Aahar Shudhi</h1>
             <p class="subtitle">Multi-Tenant Lead Management System</p>
             <div id="login-error"></div>
-            <input type="email" id="login-email" placeholder="Email address" autocomplete="email" required>
-            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required>
+            <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
+            <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
             <button class="btn-login" id="login-btn" onclick="handleLogin()">🔐 Sign In</button>
             <p class="login-hint">Default Admin: admin@aahar.com / Admin@123</p>
         </div>
     </div>
 
-    <!-- ============================================
-    DASHBOARD
-    ============================================ -->
+    <!-- ============ DASHBOARD ============ -->
     <div id="dashboard">
         <!-- NAVBAR -->
         <nav class="navbar">
             <div class="navbar-brand">
-                <span class="brand-icon">🌿</span>
-                Aahar Shudhi
+                <span>🌿</span> Aahar Shudhi
             </div>
             <div class="navbar-tenant" id="tenant-badge">🏢 Loading...</div>
             <div class="navbar-user" id="user-info"></div>
             <div class="navbar-actions">
                 <button class="btn btn-primary" onclick="openLeadModal()">+ Add Lead</button>
-                <button class="btn btn-danger" onclick="handleLogout()">🚪 Logout</button>
+                <button class="btn btn-danger" onclick="handleLogout()">🚪</button>
             </div>
         </nav>
         
         <!-- TABS -->
-        <div class="tabs">
+        <div class="tabs" id="main-tabs">
             <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
             <button class="tab-btn" data-tab="kanban" onclick="switchTab('kanban')">📋 Kanban</button>
-            <button class="tab-btn" data-tab="leads" onclick="switchTab('leads')">👥 All Leads</button>
-            <button class="tab-btn" data-tab="tenants" onclick="switchTab('tenants')">🏢 Tenants</button>
+            <button class="tab-btn" data-tab="leads" onclick="switchTab('leads')">👥 Leads</button>
+            <button class="tab-btn admin-only" data-tab="team" onclick="switchTab('team')">👥 Team</button>
+            <button class="tab-btn admin-only" data-tab="tenants" onclick="switchTab('tenants')">🏢 Tenants</button>
+            <button class="tab-btn admin-only" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
         </div>
         
         <!-- TAB: DASHBOARD -->
@@ -833,15 +71,23 @@
             <div class="table-container" id="leads-table-container"></div>
         </div>
         
+        <!-- TAB: TEAM -->
+        <div id="tab-team" class="tab-content">
+            <div class="team-container" id="team-container"></div>
+        </div>
+        
         <!-- TAB: TENANTS -->
         <div id="tab-tenants" class="tab-content">
-            <div class="table-container" id="tenants-table-container"></div>
+            <div class="table-container" id="tenants-container"></div>
+        </div>
+        
+        <!-- TAB: SETTINGS -->
+        <div id="tab-settings" class="tab-content">
+            <div class="settings-container" id="settings-container"></div>
         </div>
     </div>
 
-    <!-- ============================================
-    LEAD MODAL
-    ============================================ -->
+    <!-- ============ LEAD MODAL ============ -->
     <div class="modal-overlay" id="lead-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -905,19 +151,15 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Status</label>
-                    <select id="lead-status">
-                        <option value="New">New</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Follow-up">Follow-up</option>
-                        <option value="Interested">Interested</option>
-                        <option value="Closed">Closed</option>
+                    <label>Assign To</label>
+                    <select id="lead-assigned-to">
+                        <option value="">Unassigned</option>
                     </select>
                 </div>
             </div>
             <div class="form-group">
                 <label>Notes</label>
-                <textarea id="lead-notes" rows="3" placeholder="Additional notes about this lead..."></textarea>
+                <textarea id="lead-notes" rows="3" placeholder="Additional notes..."></textarea>
             </div>
             <div class="modal-actions">
                 <button style="background:#f8f9fa;color:#495057;" onclick="closeLeadModal()">Cancel</button>
@@ -926,741 +168,94 @@
         </div>
     </div>
 
-    <!-- ============================================
-    TOAST CONTAINER
-    ============================================ -->
-    <div id="toast-container"></div>
-
-    <script>
-        // ============================================
-        // FIREBASE CONFIGURATION
-        // ============================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
-            authDomain: "avatar-wa-dual-crm.firebaseapp.com",
-            projectId: "avatar-wa-dual-crm",
-            storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
-            messagingSenderId: "946959261009",
-            appId: "1:946959261009:web:3ae08845917ac8cff8c770"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        
-        // ============================================
-        // CONSTANTS
-        // ============================================
-        const STATUSES = ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'];
-        
-        const STATUS_COLORS = {
-            'New': '#fff3cd',
-            'Contacted': '#d1ecf1',
-            'Follow-up': '#e7d9ff',
-            'Interested': '#d4edda',
-            'Closed': '#d6d8db'
-        };
-        
-        const STATUS_TEXT_COLORS = {
-            'New': '#856404',
-            'Contacted': '#0c5460',
-            'Follow-up': '#4a3696',
-            'Interested': '#155724',
-            'Closed': '#383d41'
-        };
-        
-        const PRODUCTS = ['Chyawanprash', 'Ashwagandha', 'Triphala', 'Giloy Juice', 'Brahmi', 'Other'];
-        const SOURCES = ['Facebook', 'Instagram', 'Google Ads', 'Website', 'WhatsApp', 'Reference', 'Walk-in', 'Other'];
-        const PRIORITIES = ['Normal', 'Hot', 'Warm', 'Cold'];
-        const ROLES = ['admin', 'team_lead', 'agent'];
-        
-        // ============================================
-        // GLOBAL STATE
-        // ============================================
-        let currentUser = null;
-        let currentUserProfile = null;
-        let currentTenantId = null;
-        let currentTenant = null;
-        let currentLeads = [];
-        let allTenants = [];
-        
-        // ============================================
-        // AUTH STATE LISTENER
-        // ============================================
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('user-info').innerHTML = `👤 ${user.email}`;
-                
-                await loadUserProfile(user.uid);
-                await loadAllData();
-            } else {
-                currentUser = null;
-                currentUserProfile = null;
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('dashboard').style.display = 'none';
-            }
-        });
-        
-        // ============================================
-        // LOAD USER PROFILE (Multi-Tenant)
-        // ============================================
-        async function loadUserProfile(userId) {
-            try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                
-                if (userDoc.exists) {
-                    currentUserProfile = { id: userDoc.id, ...userDoc.data() };
-                    currentTenantId = currentUserProfile.tenantId || null;
-                    
-                    if (currentTenantId) {
-                        await loadTenant(currentTenantId);
-                    }
-                } else {
-                    // Create default profile
-                    currentUserProfile = {
-                        id: userId,
-                        email: currentUser.email,
-                        name: currentUser.displayName || 'User',
-                        role: 'admin',
-                        tenantId: null,
-                        team: '',
-                        region: '',
-                        isActive: true,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-                    
-                    await db.collection('users').doc(userId).set(currentUserProfile);
-                    console.log('✅ Default user profile created');
-                }
-                
-                updateTenantBadge();
-            } catch (error) {
-                console.error('❌ Load profile error:', error);
-            }
-        }
-        
-        // ============================================
-        // LOAD TENANT
-        // ============================================
-        async function loadTenant(tenantId) {
-            try {
-                const tenantDoc = await db.collection('tenants').doc(tenantId).get();
-                
-                if (tenantDoc.exists) {
-                    currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
-                }
-            } catch (error) {
-                console.error('❌ Load tenant error:', error);
-            }
-        }
-        
-        function updateTenantBadge() {
-            const badge = document.getElementById('tenant-badge');
-            
-            if (currentTenant) {
-                badge.innerHTML = `🏢 ${currentTenant.name || 'Tenant'}`;
-            } else if (currentUserProfile?.role === 'admin') {
-                badge.innerHTML = `🏢 Super Admin`;
-            } else {
-                badge.innerHTML = `🏢 No Tenant`;
-            }
-        }
-        
-        // ============================================
-        // LOAD ALL DATA
-        // ============================================
-        async function loadAllData() {
-            await loadLeads();
-            await loadTenants();
-            renderMetrics();
-            renderKanban();
-            renderLeadsTable();
-            renderTenantsTable();
-        }
-        
-        // ============================================
-        // LOAD LEADS (Tenant-aware)
-        // ============================================
-        async function loadLeads() {
-            try {
-                let query = db.collection('leads').orderBy('createdAt', 'desc').limit(200);
-                
-                // Multi-tenant filter
-                if (currentTenantId && currentUserProfile?.role !== 'admin') {
-                    query = query.where('tenantId', '==', currentTenantId);
-                }
-                
-                const snapshot = await query.get();
-                currentLeads = [];
-                
-                snapshot.forEach(doc => {
-                    currentLeads.push({ id: doc.id, ...doc.data() });
-                });
-                
-                console.log(`✅ Loaded ${currentLeads.length} leads`);
-            } catch (error) {
-                console.error('❌ Load leads error:', error);
-                showToast('Error loading leads: ' + error.message, 'error');
-            }
-        }
-        
-        // ============================================
-        // LOAD TENANTS (Admin only)
-        // ============================================
-        async function loadTenants() {
-            try {
-                const snapshot = await db.collection('tenants').get();
-                allTenants = [];
-                snapshot.forEach(doc => {
-                    allTenants.push({ id: doc.id, ...doc.data() });
-                });
-            } catch (error) {
-                console.error('❌ Load tenants error:', error);
-            }
-        }
-        
-        // ============================================
-        // LOGIN
-        // ============================================
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const errorDiv = document.getElementById('login-error');
-            const loginBtn = document.getElementById('login-btn');
-            
-            errorDiv.style.display = 'none';
-            
-            if (!email || !password) {
-                showLoginError('Email and password required');
-                return;
-            }
-            
-            loginBtn.innerHTML = '<span class="loading-spinner"></span> Signing in...';
-            loginBtn.disabled = true;
-            
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                console.log('✅ Login successful');
-            } catch (error) {
-                const messages = {
-                    'auth/invalid-credential': 'Invalid email or password',
-                    'auth/user-not-found': 'No account found with this email',
-                    'auth/wrong-password': 'Incorrect password',
-                    'auth/invalid-email': 'Invalid email address',
-                    'auth/too-many-requests': 'Too many attempts. Try later.',
-                    'auth/network-request-failed': 'Network error. Check internet.'
-                };
-                showLoginError(messages[error.code] || 'Login failed: ' + error.message);
-            } finally {
-                loginBtn.innerHTML = '🔐 Sign In';
-                loginBtn.disabled = false;
-            }
-        }
-        
-        function showLoginError(msg) {
-            const errorDiv = document.getElementById('login-error');
-            errorDiv.textContent = msg;
-            errorDiv.style.display = 'block';
-            setTimeout(() => errorDiv.style.display = 'none', 5000);
-        }
-        
-        async function handleLogout() {
-            await auth.signOut();
-        }
-        
-        // ============================================
-        // RENDER METRICS
-        // ============================================
-        function renderMetrics() {
-            const container = document.getElementById('metrics-bar');
-            
-            const total = currentLeads.length;
-            const counts = {};
-            STATUSES.forEach(s => counts[s] = currentLeads.filter(l => l.status === s).length);
-            
-            const today = new Date().toDateString();
-            const todayLeads = currentLeads.filter(l => {
-                return l.createdAt && l.createdAt.toDate && l.createdAt.toDate().toDateString() === today;
-            }).length;
-            
-            const conversion = total > 0 ? ((counts['Closed'] / total) * 100).toFixed(1) : 0;
-            
-            const metrics = [
-                { icon: '📊', label: 'Total Leads', value: total },
-                { icon: '🆕', label: 'New', value: counts['New'] },
-                { icon: '📞', label: 'Contacted', value: counts['Contacted'] },
-                { icon: '⏰', label: 'Follow-up', value: counts['Follow-up'] },
-                { icon: '💚', label: 'Interested', value: counts['Interested'] },
-                { icon: '✅', label: 'Closed', value: counts['Closed'] },
-                { icon: '📅', label: 'Today', value: todayLeads },
-                { icon: '🎯', label: 'Conversion', value: conversion + '%' }
-            ];
-            
-            container.innerHTML = metrics.map(m => `
-                <div class="metric-card">
-                    <span class="metric-icon">${m.icon}</span>
-                    <div class="metric-value">${m.value}</div>
-                    <div class="metric-label">${m.label}</div>
-                </div>
-            `).join('');
-        }
-        
-        // ============================================
-        // RENDER KANBAN
-        // ============================================
-        function renderKanban() {
-            const board = document.getElementById('kanban-board');
-            board.innerHTML = '';
-            
-            STATUSES.forEach(status => {
-                const leads = currentLeads.filter(l => l.status === status);
-                const col = document.createElement('div');
-                col.className = 'kanban-column';
-                col.style.background = STATUS_COLORS[status];
-                col.dataset.status = status;
-                
-                col.innerHTML = `
-                    <div class="kanban-column-header">
-                        <span>${status}</span>
-                        <span class="kanban-count">${leads.length}</span>
-                    </div>
-                    <div class="kanban-cards" data-status="${status}">
-                        ${leads.map(lead => createCardHTML(lead)).join('')}
-                    </div>
-                `;
-                
-                board.appendChild(col);
-            });
-            
-            setupDragDrop();
-        }
-        
-        // ============================================
-        // CREATE CARD HTML
-        // ============================================
-        function createCardHTML(lead) {
-            const initials = (lead.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-            const timeAgo = getTimeAgo(lead.updatedAt || lead.createdAt);
-            
-            return `
-                <div class="lead-card" draggable="true" data-lead-id="${lead.id}" data-status="${lead.status}">
-                    <div class="lead-card-header">
-                        <div style="display:flex;align-items:center;">
-                            <div class="lead-card-avatar">${initials}</div>
-                            <span class="lead-card-name">${lead.name || 'Unknown'}</span>
-                        </div>
-                        <span class="lead-card-time">${timeAgo}</span>
-                    </div>
-                    <div class="lead-card-info">
-                        <p>📞 ${lead.phone || 'N/A'}</p>
-                        ${lead.city ? `<p>📍 ${lead.city}</p>` : ''}
-                    </div>
-                    <div class="lead-card-tags">
-                        ${lead.product ? `<span class="lead-tag tag-product">🌿 ${lead.product}</span>` : ''}
-                        ${lead.priority === 'Hot' ? '<span class="lead-tag tag-hot">🔥 Hot</span>' : ''}
-                        ${lead.source ? `<span class="lead-tag tag-source">📢 ${lead.source}</span>` : ''}
-                    </div>
-                    <div class="lead-card-actions">
-                        <button class="btn-call" onclick="event.stopPropagation(); callLead('${lead.phone}')">📞</button>
-                        <button class="btn-wa" onclick="event.stopPropagation(); waLead('${lead.phone}')">💬</button>
-                        <button class="btn-move" onclick="event.stopPropagation(); moveLead('${lead.id}','${lead.status}')">➡️</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // ============================================
-        // GET TIME AGO
-        // ============================================
-        function getTimeAgo(timestamp) {
-            if (!timestamp) return '';
-            
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-            
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
-            return Math.floor(seconds / 604800) + 'w ago';
-        }
-        
-        // ============================================
-        // DRAG & DROP
-        // ============================================
-        function setupDragDrop() {
-            document.querySelectorAll('.lead-card').forEach(card => {
-                card.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('leadId', card.dataset.leadId);
-                    e.dataTransfer.setData('fromStatus', card.dataset.status);
-                    card.classList.add('dragging');
-                });
-                
-                card.addEventListener('dragend', () => {
-                    card.classList.remove('dragging');
-                });
-            });
-            
-            document.querySelectorAll('.kanban-cards').forEach(zone => {
-                zone.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    zone.classList.add('drag-over');
-                });
-                
-                zone.addEventListener('dragleave', () => {
-                    zone.classList.remove('drag-over');
-                });
-                
-                zone.addEventListener('drop', async (e) => {
-                    e.preventDefault();
-                    zone.classList.remove('drag-over');
-                    
-                    const leadId = e.dataTransfer.getData('leadId');
-                    const fromStatus = e.dataTransfer.getData('fromStatus');
-                    const toStatus = zone.dataset.status;
-                    
-                    if (leadId && fromStatus !== toStatus) {
-                        await updateLeadStatus(leadId, toStatus);
-                    }
-                });
-            });
-        }
-        
-        // ============================================
-        // RENDER LEADS TABLE
-        // ============================================
-        function renderLeadsTable() {
-            const container = document.getElementById('leads-table-container');
-            
-            if (currentLeads.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">📭 No leads found</div>';
-                return;
-            }
-            
-            container.innerHTML = `
-                <div class="table-toolbar">
-                    <input type="text" placeholder="🔍 Search leads..." oninput="filterLeadsTable(this.value)">
-                    <select onchange="filterLeadsByStatus(this.value)">
-                        <option value="All">All Status</option>
-                        ${STATUSES.map(s => `<option value="${s}">${s}</option>`).join('')}
+    <!-- ============ TEAM MEMBER MODAL ============ -->
+    <div class="modal-overlay" id="team-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">👥 Add Team Member</span>
+                <button class="modal-close" onclick="closeTeamModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Full Name <span class="required">*</span></label>
+                <input type="text" id="team-name" placeholder="Member name">
+            </div>
+            <div class="form-group">
+                <label>Email <span class="required">*</span></label>
+                <input type="email" id="team-email" placeholder="Email address">
+            </div>
+            <div class="form-group">
+                <label>Password <span class="required">*</span></label>
+                <input type="password" id="team-password" placeholder="Temporary password">
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="team-phone" placeholder="Phone number">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="team-role">
+                        <option value="agent">Agent</option>
+                        <option value="team_lead">Team Lead</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>City</th>
-                            <th>Product</th>
-                            <th>Source</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leads-table-body">
-                        ${currentLeads.map(lead => createTableRow(lead)).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-        
-        function createTableRow(lead) {
-            const statusColor = STATUS_COLORS[lead.status] || '#e9ecef';
-            const statusTextColor = STATUS_TEXT_COLORS[lead.status] || '#333';
-            
-            return `
-                <tr>
-                    <td><strong>${lead.name}</strong></td>
-                    <td>${lead.phone}</td>
-                    <td>${lead.city || '-'}</td>
-                    <td>${lead.product || '-'}</td>
-                    <td>${lead.source || '-'}</td>
-                    <td>${lead.priority || 'Normal'}</td>
-                    <td>
-                        <span class="status-badge" style="background:${statusColor};color:${statusTextColor};">
-                            ${lead.status}
-                        </span>
-                    </td>
-                    <td>${lead.createdAt ? getTimeAgo(lead.createdAt) : '-'}</td>
-                    <td>
-                        <button style="padding:4px 8px;border:none;border-radius:12px;cursor:pointer;background:#e3f0e5;color:#1e7e34;" onclick="callLead('${lead.phone}')">📞</button>
-                        <button style="padding:4px 8px;border:none;border-radius:12px;cursor:pointer;background:#d4edda;color:#155724;" onclick="waLead('${lead.phone}')">💬</button>
-                    </td>
-                </tr>
-            `;
-        }
-        
-        function filterLeadsTable(searchTerm) {
-            const filtered = currentLeads.filter(lead => {
-                if (!searchTerm) return true;
-                const term = searchTerm.toLowerCase();
-                return (lead.name || '').toLowerCase().includes(term) ||
-                       (lead.phone || '').includes(term) ||
-                       (lead.city || '').toLowerCase().includes(term);
-            });
-            
-            const tbody = document.getElementById('leads-table-body');
-            if (tbody) {
-                tbody.innerHTML = filtered.map(createTableRow).join('');
-            }
-        }
-        
-        function filterLeadsByStatus(status) {
-            const filtered = status === 'All' 
-                ? currentLeads 
-                : currentLeads.filter(l => l.status === status);
-            
-            const tbody = document.getElementById('leads-table-body');
-            if (tbody) {
-                tbody.innerHTML = filtered.map(createTableRow).join('');
-            }
-        }
-        
-        // ============================================
-        // RENDER TENANTS TABLE
-        // ============================================
-        function renderTenantsTable() {
-            const container = document.getElementById('tenants-table-container');
-            
-            if (currentUserProfile?.role !== 'admin') {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">🔒 Only admin can view tenants</div>';
-                return;
-            }
-            
-            if (allTenants.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:40px;color:#6c757d;">
-                        🏢 No tenants yet
-                        <br><br>
-                        <button class="btn btn-primary" onclick="createDefaultTenant()">Create Default Tenant</button>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tenant Name</th>
-                            <th>Plan</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${allTenants.map(t => `
-                            <tr>
-                                <td><strong>${t.name}</strong></td>
-                                <td>${t.plan || 'Free'}</td>
-                                <td>${t.status || 'Active'}</td>
-                                <td>${t.createdAt ? getTimeAgo(t.createdAt) : '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-        
-        // ============================================
-        // CREATE DEFAULT TENANT
-        // ============================================
-        async function createDefaultTenant() {
-            try {
-                const tenantRef = await db.collection('tenants').add({
-                    name: 'Aahar Shudhi',
-                    plan: 'Free',
-                    status: 'Active',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    settings: {
-                        maxLeads: 1000,
-                        maxUsers: 10,
-                        features: ['kanban', 'dashboard', 'leads']
-                    }
-                });
-                
-                // Update current user
-                await db.collection('users').doc(currentUser.uid).update({
-                    tenantId: tenantRef.id,
-                    role: 'admin'
-                });
-                
-                currentTenantId = tenantRef.id;
-                await loadAllData();
-                
-                showToast('✅ Tenant created successfully');
-            } catch (error) {
-                showToast('Error: ' + error.message, 'error');
-            }
-        }
-        
-        // ============================================
-        // UPDATE LEAD STATUS
-        // ============================================
-        async function updateLeadStatus(leadId, newStatus) {
-            try {
-                await db.collection('leads').doc(leadId).update({
-                    status: newStatus,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                showToast('✅ Lead moved to ' + newStatus);
-                await loadAllData();
-            } catch (error) {
-                showToast('Error: ' + error.message, 'error');
-            }
-        }
-        
-        // ============================================
-        // MOVE LEAD (Button)
-        // ============================================
-        async function moveLead(leadId, currentStatus) {
-            const idx = STATUSES.indexOf(currentStatus);
-            const nextStatus = STATUSES[(idx + 1) % STATUSES.length];
-            await updateLeadStatus(leadId, nextStatus);
-        }
-        
-        // ============================================
-        // QUICK ACTIONS
-        // ============================================
-        function callLead(phone) {
-            if (phone) {
-                const cleanPhone = phone.replace(/[^0-9]/g, '');
-                window.location.href = 'tel:+91' + cleanPhone;
-            }
-        }
-        
-        function waLead(phone) {
-            if (phone) {
-                const cleanPhone = phone.replace(/[^0-9]/g, '');
-                window.open('https://wa.me/91' + cleanPhone, '_blank');
-            }
-        }
-        
-        // ============================================
-        // TAB SWITCHING
-        // ============================================
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.tab === tabName);
-            });
-            
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.toggle('active', content.id === 'tab-' + tabName);
-            });
-        }
-        
-        // ============================================
-        // LEAD MODAL
-        // ============================================
-        function openLeadModal() {
-            document.getElementById('lead-modal').classList.add('active');
-            document.getElementById('lead-name').focus();
-        }
-        
-        function closeLeadModal() {
-            document.getElementById('lead-modal').classList.remove('active');
-            ['lead-name', 'lead-phone', 'lead-email', 'lead-city', 'lead-notes'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-            document.getElementById('lead-product').value = '';
-            document.getElementById('lead-source').value = '';
-            document.getElementById('lead-priority').value = 'Normal';
-            document.getElementById('lead-status').value = 'New';
-        }
-        
-        async function saveLead() {
-            const name = document.getElementById('lead-name').value.trim();
-            const phone = document.getElementById('lead-phone').value.trim();
-            
-            if (!name || !phone) {
-                showToast('Name and phone are required', 'error');
-                return;
-            }
-            
-            if (!/^[6-9]\d{9}$/.test(phone.replace(/[^0-9]/g, ''))) {
-                showToast('Invalid phone number. Must be 10 digits starting with 6-9', 'error');
-                return;
-            }
-            
-            const leadData = {
-                name: name,
-                phone: phone,
-                email: document.getElementById('lead-email').value.trim(),
-                city: document.getElementById('lead-city').value.trim(),
-                product: document.getElementById('lead-product').value,
-                source: document.getElementById('lead-source').value,
-                priority: document.getElementById('lead-priority').value,
-                status: document.getElementById('lead-status').value,
-                notes: document.getElementById('lead-notes').value.trim(),
-                tenantId: currentTenantId || null,
-                createdBy: currentUser.uid,
-                createdByName: currentUser.email,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            try {
-                await db.collection('leads').add(leadData);
-                showToast('✅ Lead added successfully');
-                closeLeadModal();
-                await loadAllData();
-            } catch (error) {
-                showToast('Error saving: ' + error.message, 'error');
-            }
-        }
-        
-        // ============================================
-        // TOAST SYSTEM
-        // ============================================
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast toast-' + type;
-            toast.textContent = message;
-            toast.onclick = () => toast.remove();
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-        
-        // ============================================
-        // MODAL OVERLAY CLICK
-        // ============================================
-        document.getElementById('lead-modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('lead-modal')) {
-                closeLeadModal();
-            }
-        });
-        
-        // ============================================
-        // KEYBOARD SHORTCUTS
-        // ============================================
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeLeadModal();
-            if (e.ctrlKey && e.key === 'n') {
-                e.preventDefault();
-                openLeadModal();
-            }
-            if (e.ctrlKey && e.key === 'k') {
-                e.preventDefault();
-                switchTab('kanban');
-            }
-        });
-        
-        console.log('✅ Aahar Shudhi Multi-Tenant Lead Management System Ready');
-        console.log('📋 Multi-Tenant: Active');
-        console.log('📋 Statuses:', STATUSES.length);
-        console.log('📋 Products:', PRODUCTS.length);
-    </script>
+                <div class="form-group">
+                    <label>Team</label>
+                    <select id="team-group">
+                        <option value="North">North</option>
+                        <option value="South">South</option>
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                        <option value="All">All</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button style="background:#f8f9fa;color:#495057;" onclick="closeTeamModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveTeamMember()">💾 Add Member</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TENANT MODAL ============ -->
+    <div class="modal-overlay" id="tenant-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🏢 Create Tenant</span>
+                <button class="modal-close" onclick="closeTenantModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Tenant Name <span class="required">*</span></label>
+                <input type="text" id="tenant-name" placeholder="Company name">
+            </div>
+            <div class="form-group">
+                <label>Plan</label>
+                <select id="tenant-plan">
+                    <option value="Free">Free</option>
+                    <option value="Basic">Basic</option>
+                    <option value="Premium">Premium</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Admin Email <span class="required">*</span></label>
+                <input type="email" id="tenant-admin-email" placeholder="Tenant admin email">
+            </div>
+            <div class="form-group">
+                <label>Admin Password <span class="required">*</span></label>
+                <input type="password" id="tenant-admin-password" placeholder="Password">
+            </div>
+            <div class="modal-actions">
+                <button style="background:#f8f9fa;color:#495057;" onclick="closeTenantModal()">Cancel</button>
+                <button style="background:#2a5c3e;color:white;" onclick="saveTenant()">💾 Create Tenant</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOAST CONTAINER ============ -->
+    <div id="toast-container"></div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
