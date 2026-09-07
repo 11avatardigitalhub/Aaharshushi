@@ -5,30 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <meta name="description" content="Aahar Shudhi - Ayurvedic Lead Management System">
     <meta name="theme-color" content="#2a5c3e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Aahar Shudhi">
     <title>Aahar Shudhi - Lead Management System</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
-    
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (MUST be first) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
-    <!-- SortableJS for Drag & Drop -->
+    <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
-    <!-- Chart.js for Analytics -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <!-- CSS Files -->
@@ -41,9 +31,7 @@
     <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="css/responsive.css">
     
-    <!-- Inline Critical CSS -->
     <style>
-        /* Critical CSS for initial render */
         * {
             margin: 0;
             padding: 0;
@@ -59,7 +47,6 @@
             min-height: 100vh;
         }
         
-        /* Loading Screen */
         #loading-screen {
             position: fixed;
             top: 0;
@@ -72,12 +59,12 @@
             align-items: center;
             justify-content: center;
             z-index: 99999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.5s ease;
         }
         
         #loading-screen.hidden {
             opacity: 0;
-            visibility: hidden;
+            pointer-events: none;
         }
         
         .loading-logo {
@@ -85,53 +72,14 @@
             animation: pulse 2s infinite;
         }
         
-        .loading-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2a5c3e;
-            margin: 20px 0 10px 0;
-        }
-        
-        .loading-subtitle {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-bottom: 30px;
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid #2a5c3e;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        
-        .loading-progress {
-            width: 200px;
-            height: 4px;
-            background: #e0e0e0;
-            border-radius: 2px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        
-        .loading-progress-bar {
-            height: 100%;
-            background: #2a5c3e;
-            border-radius: 2px;
-            transition: width 0.3s ease;
-            width: 0%;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
         }
         
         @keyframes fadeIn {
@@ -158,58 +106,48 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #2a5c3e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-top: 20px;
+        }
+        
+        .loading-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2a5c3e;
+            margin-top: 15px;
+        }
+        
+        .loading-subtitle {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ============================================
-    LOADING SCREEN
-    ============================================ -->
+    <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loading-logo">🌿</div>
         <div class="loading-title">Aahar Shudhi</div>
         <div class="loading-subtitle">Lead Management System</div>
         <div class="loading-spinner"></div>
-        <div class="loading-progress">
-            <div class="loading-progress-bar" id="loading-progress-bar"></div>
-        </div>
     </div>
 
-    <!-- ============================================
-    MAIN APPLICATION ROOT
-    ============================================ -->
-    <div id="main-container">
-        <!-- App content will be injected by app.js -->
-    </div>
+    <!-- Main Container -->
+    <div id="main-container"></div>
 
-    <!-- ============================================
-    ERROR BOUNDARY
-    ============================================ -->
-    <div id="error-boundary" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8d7da; z-index: 99998; align-items: center; justify-content: center; padding: 20px; text-align: center;">
-        <div>
-            <div style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
-            <h2 style="color: #721c24; margin-bottom: 10px;">Something went wrong</h2>
-            <p style="color: #721c24; margin-bottom: 20px;">An unexpected error occurred. Please refresh the page.</p>
-            <button onclick="location.reload()" style="padding: 12px 24px; background: #dc3545; color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">🔄 Refresh Page</button>
-        </div>
-    </div>
-
-    <!-- ============================================
-    OFFLINE INDICATOR
-    ============================================ -->
-    <div id="offline-indicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: #dc3545; color: white; text-align: center; padding: 8px; z-index: 99997; font-weight: 600; font-size: 0.85rem;">
-        📴 You are offline - Changes will be saved locally
-    </div>
-
-    <!-- ============================================
-    JAVASCRIPT FILES (in order)
-    ============================================ -->
-    
-    <!-- Config Files -->
+    <!-- Config Files (Order matters) -->
     <script src="js/config/constants.js"></script>
     <script src="js/config/firebase-config.js"></script>
     
-    <!-- Service Files -->
+    <!-- Services -->
     <script src="js/services/auth-service.js"></script>
     <script src="js/services/lead-service.js"></script>
     <script src="js/services/status-service.js"></script>
@@ -220,123 +158,26 @@
     <script src="js/services/realtime-service.js"></script>
     <script src="js/services/filter-service.js"></script>
     
-    <!-- Main Application -->
+    <!-- Components -->
+    <script src="js/components/toast.js"></script>
+    <script src="js/components/lead-card.js"></script>
+    <script src="js/components/kanban-board.js"></script>
+    <script src="js/components/lead-modal.js"></script>
+    <script src="js/components/metrics-bar.js"></script>
+    
+    <!-- Main App -->
     <script src="js/app.js"></script>
 
-    <!-- ============================================
-    INLINE SCRIPTS
-    ============================================ -->
     <script>
-        // ============================================
-        // LOADING SCREEN MANAGEMENT
-        // ============================================
-        
-        let loadProgress = 0;
-        const progressBar = document.getElementById('loading-progress-bar');
-        const loadingScreen = document.getElementById('loading-screen');
-        
-        // Simulate loading progress
-        const progressInterval = setInterval(() => {
-            if (loadProgress < 90) {
-                loadProgress += Math.random() * 20;
-                if (loadProgress > 90) loadProgress = 90;
-                progressBar.style.width = loadProgress + '%';
-            }
-        }, 300);
-        
         // Hide loading screen when app is ready
         document.addEventListener('app-ready', () => {
-            clearInterval(progressInterval);
-            progressBar.style.width = '100%';
-            
-            setTimeout(() => {
-                loadingScreen.classList.add('hidden');
-            }, 500);
+            document.getElementById('loading-screen').classList.add('hidden');
         });
         
-        // Fallback hide loading screen
+        // Fallback
         setTimeout(() => {
-            if (!loadingScreen.classList.contains('hidden')) {
-                progressBar.style.width = '100%';
-                setTimeout(() => {
-                    loadingScreen.classList.add('hidden');
-                }, 300);
-            }
-        }, 15000); // 15 seconds fallback
-        
-        // ============================================
-        // OFFLINE INDICATOR
-        // ============================================
-        
-        window.addEventListener('online', () => {
-            document.getElementById('offline-indicator').style.display = 'none';
-        });
-        
-        window.addEventListener('offline', () => {
-            document.getElementById('offline-indicator').style.display = 'block';
-        });
-        
-        // ============================================
-        // GLOBAL ERROR HANDLER
-        // ============================================
-        
-        window.addEventListener('error', (event) => {
-            console.error('❌ Global Error:', event.error);
-            
-            // Show error boundary for critical errors
-            if (event.error && event.error.isCritical) {
-                document.getElementById('error-boundary').style.display = 'flex';
-            }
-        });
-        
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('❌ Unhandled Promise Rejection:', event.reason);
-        });
-        
-        // ============================================
-        // SERVICE WORKER REGISTRATION
-        // ============================================
-        
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('✅ Service Worker registered:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.warn('⚠️ Service Worker registration failed:', error);
-                    });
-            });
-        }
-        
-        // ============================================
-        // NOTIFICATION PERMISSION
-        // ============================================
-        
-        if ('Notification' in window && Notification.permission === 'default') {
-            // Request permission after user interaction
-            document.addEventListener('click', () => {
-                Notification.requestPermission().then((permission) => {
-                    console.log('🔔 Notification permission:', permission);
-                });
-            }, { once: true });
-        }
-        
-        // ============================================
-        // PERFORMANCE MONITORING
-        // ============================================
-        
-        const performanceObserver = new PerformanceObserver((list) => {
-            for (const entry of list.getEntries()) {
-                if (entry.entryType === 'largest-contentful-paint') {
-                    console.log('📊 LCP:', entry.renderTime || entry.loadTime);
-                }
-            }
-        });
-        
-        performanceObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-        
-        console.log('✅ Index HTML Loaded');
+            document.getElementById('loading-screen').classList.add('hidden');
+        }, 10000);
     </script>
 </body>
 </html>
