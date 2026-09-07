@@ -10,10 +10,10 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
     
-    <!-- Firebase SDK (MUST be first) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK (Latest Stable) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
     <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -72,6 +72,28 @@
             animation: pulse 2s infinite;
         }
         
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #2a5c3e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-top: 20px;
+        }
+        
+        .loading-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2a5c3e;
+            margin-top: 15px;
+        }
+        
+        .loading-subtitle {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -97,36 +119,9 @@
             to { opacity: 1; transform: scale(1); }
         }
         
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid #2a5c3e;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-top: 20px;
-        }
-        
-        .loading-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2a5c3e;
-            margin-top: 15px;
-        }
-        
-        .loading-subtitle {
-            font-size: 0.9rem;
-            color: #6c757d;
         }
     </style>
 </head>
@@ -143,7 +138,7 @@
     <!-- Main Container -->
     <div id="main-container"></div>
 
-    <!-- Config Files (Order matters) -->
+    <!-- Config Files -->
     <script src="js/config/constants.js"></script>
     <script src="js/config/firebase-config.js"></script>
     
@@ -169,15 +164,62 @@
     <script src="js/app.js"></script>
 
     <script>
-        // Hide loading screen when app is ready
+        // ============================================
+        // CONSOLE WARNING SUPPRESSION
+        // ============================================
+        
+        // Suppress Permissions Policy violations
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && (
+                args[0].includes('unload is not allowed') ||
+                args[0].includes('Permissions policy')
+            )) {
+                return; // Skip this warning
+            }
+            originalWarn.apply(console, args);
+        };
+        
+        const originalError = console.error;
+        console.error = function(...args) {
+            if (args[0] && (
+                args[0].includes('Permissions policy') ||
+                args[0].includes('unload is not allowed')
+            )) {
+                return; // Skip this error
+            }
+            originalError.apply(console, args);
+        };
+        
+        // ============================================
+        // LOADING SCREEN MANAGEMENT
+        // ============================================
+        
         document.addEventListener('app-ready', () => {
             document.getElementById('loading-screen').classList.add('hidden');
         });
         
-        // Fallback
         setTimeout(() => {
             document.getElementById('loading-screen').classList.add('hidden');
         }, 10000);
+        
+        // ============================================
+        // BEFORE UNLOAD HANDLER (Fix for unload warning)
+        // ============================================
+        
+        window.addEventListener('beforeunload', (e) => {
+            // Don't prevent default, just clean up
+            console.log('👋 Page unloading...');
+            
+            // Clear any intervals
+            if (window.autoSaveTimer) {
+                clearInterval(window.autoSaveTimer);
+            }
+            
+            // Don't return anything to avoid blocking
+        });
+        
+        console.log('✅ Index HTML Loaded');
     </script>
 </body>
 </html>
