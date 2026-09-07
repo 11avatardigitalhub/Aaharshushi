@@ -29,23 +29,21 @@ const ENVIRONMENT = {
     
     // Firebase configurations for different environments
     DEVELOPMENT: {
-        apiKey: "AIzaSyDXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        authDomain: "aahar-shudhi-dev.firebaseapp.com",
-        projectId: "aahar-shudhi-dev",
-        storageBucket: "aahar-shudhi-dev.appspot.com",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:abcdef123456",
-        measurementId: "G-XXXXXXXXXX"
-    },
+          apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
+          authDomain: "avatar-wa-dual-crm.firebaseapp.com",
+          projectId: "avatar-wa-dual-crm",
+          storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
+          messagingSenderId: "946959261009",
+          appId: "1:946959261009:web:3ae08845917ac8cff8c770"
+        };
     
     PRODUCTION: {
-        apiKey: "AIzaSyDXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        authDomain: "aahar-shudhi.firebaseapp.com",
-        projectId: "aahar-shudhi",
-        storageBucket: "aahar-shudhi.appspot.com",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:abcdef123456",
-        measurementId: "G-XXXXXXXXXX"
+          apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
+          authDomain: "avatar-wa-dual-crm.firebaseapp.com",
+          projectId: "avatar-wa-dual-crm",
+          storageBucket: "avatar-wa-dual-crm.firebasestorage.app",
+          messagingSenderId: "946959261009",
+          appId: "1:946959261009:web:3ae08845917ac8cff8c770"
     }
 };
 
