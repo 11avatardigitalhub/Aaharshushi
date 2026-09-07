@@ -1,16 +1,13 @@
 /**
  * ============================================================
- * AAHAR SHUDHI - MULTI-TENANT LEAD MANAGEMENT SYSTEM
+ * AAHAR SHUDHI - COMPLETE APPLICATION LOGIC
  * ============================================================
- * @description Complete application logic
+ * @description All JavaScript for Lead Management System
  * @version 1.0.0
  * ============================================================
  */
 
-// ============================================
-// FIREBASE CONFIGURATION
-// ============================================
-
+// ============ FIREBASE CONFIG ============
 const firebaseConfig = {
     apiKey: "AIzaSyBZDaHJSt-4AV6EJYG76p8kcsIHf6LOxdU",
     authDomain: "avatar-wa-dual-crm.firebaseapp.com",
@@ -24,641 +21,350 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ============================================
-// CONSTANTS
-// ============================================
-
-const STATUSES = ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'];
-const STATUS_COLORS = {
-    'New': '#fff3cd',
-    'Contacted': '#d1ecf1',
-    'Follow-up': '#e7d9ff',
-    'Interested': '#d4edda',
-    'Closed': '#d6d8db'
-};
-const STATUS_TEXT_COLORS = {
-    'New': '#856404',
-    'Contacted': '#0c5460',
-    'Follow-up': '#4a3696',
-    'Interested': '#155724',
-    'Closed': '#383d41'
-};
-const PRODUCTS = ['Chyawanprash', 'Ashwagandha', 'Triphala', 'Giloy Juice', 'Brahmi', 'Other'];
-const SOURCES = ['Facebook', 'Instagram', 'Google Ads', 'Website', 'WhatsApp', 'Reference', 'Walk-in', 'Other'];
-const PRIORITIES = ['Normal', 'Hot', 'Warm', 'Cold'];
-const ROLES = ['admin', 'team_lead', 'agent'];
-const TEAMS = ['North', 'South', 'East', 'West', 'All'];
-
-// ============================================
-// GLOBAL STATE
-// ============================================
-
+// ============ GLOBAL STATE ============
 let currentUser = null;
-let currentUserProfile = null;
-let currentTenantId = null;
-let currentTenant = null;
-let currentLeads = [];
+let currentProfile = null;
+let tenantId = null;
+let allLeads = [];
+let allMembers = [];
 let allTenants = [];
-let allTeamMembers = [];
+let allOrders = [];
+let allProducts = [];
+let allSettings = {
+    statuses: ['New', 'Contacted', 'Follow-up', 'Interested', 'Closed'],
+    sources: ['Facebook', 'Instagram', 'Google Ads', 'Website', 'WhatsApp', 'Reference', 'Walk-in', 'Other'],
+    priorities: ['Normal', 'Hot', 'Warm', 'Cold'],
+    couriers: ['Delhivery', 'Blue Dart', 'DTDC', 'India Post', 'Ekart']
+};
 
-// ============================================
-// AUTH STATE LISTENER
-// ============================================
+const ORDER_STATUSES = ['Order Placed', 'Confirmed', 'Packed', 'Dispatched', 'In Transit', 'Out for Delivery', 'Delivered', 'RTO'];
 
+// ============ AUTH STATE ============
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('user-info').innerHTML = `👤 ${user.email}`;
-        
-        await loadUserProfile(user.uid);
-        await loadAllData();
-        updateUIBasedOnRole();
+        await loadProfile();
+        await loadSettings();
+        await loadAll();
     } else {
-        currentUser = null;
-        currentUserProfile = null;
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('dashboard').style.display = 'none';
     }
 });
 
-// ============================================
-// LOAD USER PROFILE
-// ============================================
-
-async function loadUserProfile(userId) {
+// ============ LOAD PROFILE ============
+async function loadProfile() {
     try {
-        const userDoc = await db.collection('users').doc(userId).get();
-        
-        if (userDoc.exists) {
-            currentUserProfile = { id: userDoc.id, ...userDoc.data() };
-            currentTenantId = currentUserProfile.tenantId || null;
-            
-            if (currentTenantId) {
-                await loadTenant(currentTenantId);
-            }
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) {
+            currentProfile = { id: doc.id, ...doc.data() };
+            tenantId = currentProfile.tenantId || null;
         } else {
-            // Create super admin profile
-            currentUserProfile = {
-                id: userId,
-                email: currentUser.email,
-                name: 'Super Admin',
-                role: 'admin',
-                tenantId: null,
-                isSuperAdmin: true,
-                team: 'All',
-                region: 'All',
-                isActive: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            await db.collection('users').doc(userId).set(currentUserProfile);
+            currentProfile = { id: currentUser.uid, email: currentUser.email, name: 'Super Admin', role: 'admin', isSuperAdmin: true };
+            await db.collection('users').doc(currentUser.uid).set(currentProfile);
         }
-        
-        updateTenantBadge();
-    } catch (error) {
-        console.error('❌ Load profile error:', error);
-    }
+        document.getElementById('tenant-badge').textContent = currentProfile.isSuperAdmin ? '🏢 Super Admin' : '🏢 Tenant';
+        document.getElementById('user-info').textContent = '👤 ' + currentUser.email;
+    } catch (e) { console.error(e); }
 }
 
-// ============================================
-// LOAD TENANT
-// ============================================
-
-async function loadTenant(tenantId) {
+// ============ LOAD SETTINGS ============
+async function loadSettings() {
     try {
-        const tenantDoc = await db.collection('tenants').doc(tenantId).get();
-        if (tenantDoc.exists) {
-            currentTenant = { id: tenantDoc.id, ...tenantDoc.data() };
-        }
-    } catch (error) {
-        console.error('❌ Load tenant error:', error);
-    }
+        const doc = await db.collection('settings').doc('platform').get();
+        if (doc.exists) allSettings = { ...allSettings, ...doc.data() };
+    } catch (e) {}
 }
 
-function updateTenantBadge() {
-    const badge = document.getElementById('tenant-badge');
-    if (currentTenant) {
-        badge.innerHTML = `🏢 ${currentTenant.name || 'Tenant'}`;
-    } else if (currentUserProfile?.isSuperAdmin) {
-        badge.innerHTML = `🏢 Super Admin`;
-    } else {
-        badge.innerHTML = `🏢 No Tenant`;
-    }
-}
-
-// ============================================
-// UPDATE UI BASED ON ROLE
-// ============================================
-
-function updateUIBasedOnRole() {
-    const isAdmin = currentUserProfile?.role === 'admin' || currentUserProfile?.isSuperAdmin;
-    const isTeamLead = currentUserProfile?.role === 'team_lead';
-    
-    // Show/hide admin tabs
-    document.querySelectorAll('.admin-only').forEach(el => {
-        if (isAdmin) {
-            el.classList.remove('hidden');
-        } else {
-            el.classList.add('hidden');
-        }
-    });
-}
-
-// ============================================
-// LOAD ALL DATA
-// ============================================
-
-async function loadAllData() {
-    await loadLeads();
-    
-    if (currentUserProfile?.role === 'admin' || currentUserProfile?.isSuperAdmin) {
-        await loadTenants();
-        await loadTeamMembers();
-    }
-    
+// ============ LOAD ALL DATA ============
+async function loadAll() {
+    await Promise.all([loadLeads(), loadMembers(), loadTenants(), loadOrders(), loadProducts()]);
     renderMetrics();
     renderKanban();
     renderLeadsTable();
-    renderTeamMembers();
-    renderTenants();
+    renderOrdersTable();
+    renderProductsTable();
+    renderTeamTable();
+    renderTenantsTable();
     renderSettings();
-    populateAgentDropdown();
+    populateDropdowns();
 }
-
-// ============================================
-// LOAD LEADS (Tenant-aware)
-// ============================================
 
 async function loadLeads() {
-    try {
-        let query = db.collection('leads').orderBy('createdAt', 'desc').limit(200);
-        
-        // Multi-tenant filter
-        if (currentTenantId && !currentUserProfile?.isSuperAdmin) {
-            query = query.where('tenantId', '==', currentTenantId);
-        }
-        
-        const snapshot = await query.get();
-        currentLeads = [];
-        snapshot.forEach(doc => {
-            currentLeads.push({ id: doc.id, ...doc.data() });
-        });
-    } catch (error) {
-        console.error('❌ Load leads error:', error);
-        showToast('Error loading leads: ' + error.message, 'error');
-    }
+    let q = db.collection('leads').orderBy('createdAt', 'desc').limit(500);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allLeads = [];
+    snap.forEach(d => allLeads.push({ id: d.id, ...d.data() }));
 }
 
-// ============================================
-// LOAD TENANTS
-// ============================================
+async function loadMembers() {
+    let q = db.collection('users');
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allMembers = [];
+    snap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
+}
 
 async function loadTenants() {
-    try {
-        const snapshot = await db.collection('tenants').get();
-        allTenants = [];
-        snapshot.forEach(doc => {
-            allTenants.push({ id: doc.id, ...doc.data() });
-        });
-    } catch (error) {
-        console.error('❌ Load tenants error:', error);
-    }
+    const snap = await db.collection('tenants').get();
+    allTenants = [];
+    snap.forEach(d => allTenants.push({ id: d.id, ...d.data() }));
 }
 
-// ============================================
-// LOAD TEAM MEMBERS
-// ============================================
+async function loadOrders() {
+    let q = db.collection('orders').orderBy('createdAt', 'desc').limit(500);
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allOrders = [];
+    snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+}
 
-async function loadTeamMembers() {
-    try {
-        let query = db.collection('users');
-        
-        if (currentTenantId && !currentUserProfile?.isSuperAdmin) {
-            query = query.where('tenantId', '==', currentTenantId);
+async function loadProducts() {
+    let q = db.collection('products');
+    if (tenantId && !currentProfile.isSuperAdmin) q = q.where('tenantId', '==', tenantId);
+    const snap = await q.get();
+    allProducts = [];
+    snap.forEach(d => allProducts.push({ id: d.id, ...d.data() }));
+    if (allProducts.length === 0) {
+        const defaults = [
+            { name: 'Chyawanprash', category: 'Immunity', price: 599 },
+            { name: 'Ashwagandha', category: 'Wellness', price: 499 },
+            { name: 'Triphala', category: 'Digestion', price: 299 }
+        ];
+        for (const p of defaults) {
+            await db.collection('products').add({ ...p, tenantId: tenantId || null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
         }
-        
-        const snapshot = await query.get();
-        allTeamMembers = [];
-        snapshot.forEach(doc => {
-            allTeamMembers.push({ id: doc.id, ...doc.data() });
-        });
-    } catch (error) {
-        console.error('❌ Load team error:', error);
+        await loadProducts();
     }
 }
 
-// ============================================
-// LOGIN
-// ============================================
-
+// ============ LOGIN/LOGOUT ============
 async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
-    const errorDiv = document.getElementById('login-error');
-    const loginBtn = document.getElementById('login-btn');
-    
-    errorDiv.style.display = 'none';
-    
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
     if (!email || !password) {
-        errorDiv.textContent = 'Email and password required';
-        errorDiv.style.display = 'block';
+        err.textContent = 'Email and password required';
+        err.style.display = 'block';
         return;
     }
-    
-    loginBtn.innerHTML = '<span class="loading-spinner"></span> Signing in...';
-    loginBtn.disabled = true;
-    
     try {
         await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-        const messages = {
-            'auth/invalid-credential': 'Invalid email or password',
-            'auth/user-not-found': 'No account found',
-            'auth/wrong-password': 'Incorrect password',
-            'auth/invalid-email': 'Invalid email',
-            'auth/too-many-requests': 'Too many attempts. Try later.'
-        };
-        errorDiv.textContent = messages[error.code] || 'Login failed';
-        errorDiv.style.display = 'block';
-    } finally {
-        loginBtn.innerHTML = '🔐 Sign In';
-        loginBtn.disabled = false;
+    } catch (e) {
+        err.textContent = 'Login failed: ' + e.message;
+        err.style.display = 'block';
     }
 }
 
-async function handleLogout() {
-    await auth.signOut();
-}
+async function handleLogout() { await auth.signOut(); }
 
-// ============================================
-// RENDER METRICS
-// ============================================
-
+// ============ RENDER FUNCTIONS ============
 function renderMetrics() {
-    const container = document.getElementById('metrics-bar');
-    const total = currentLeads.length;
+    const total = allLeads.length;
     const counts = {};
-    STATUSES.forEach(s => counts[s] = currentLeads.filter(l => l.status === s).length);
-    const conversion = total > 0 ? ((counts['Closed'] / total) * 100).toFixed(1) : 0;
+    allSettings.statuses.forEach(s => counts[s] = allLeads.filter(l => l.status === s).length);
+    const conv = total > 0 ? ((counts['Closed'] / total) * 100).toFixed(1) : 0;
+    const delivered = allOrders.filter(o => o.status === 'Delivered').length;
+    const rto = allOrders.filter(o => o.status === 'RTO').length;
     
     const metrics = [
-        { icon: '📊', label: 'Total Leads', value: total },
-        { icon: '🆕', label: 'New', value: counts['New'] },
-        { icon: '📞', label: 'Contacted', value: counts['Contacted'] },
-        { icon: '⏰', label: 'Follow-up', value: counts['Follow-up'] },
-        { icon: '💚', label: 'Interested', value: counts['Interested'] },
-        { icon: '✅', label: 'Closed', value: counts['Closed'] },
-        { icon: '👥', label: 'Team', value: allTeamMembers.length },
-        { icon: '🎯', label: 'Conversion', value: conversion + '%' }
+        ['📊', 'Total Leads', total], ['🆕', 'New', counts['New'] || 0],
+        ['📞', 'Contacted', counts['Contacted'] || 0], ['⏰', 'Follow-up', counts['Follow-up'] || 0],
+        ['💚', 'Interested', counts['Interested'] || 0], ['✅', 'Closed', counts['Closed'] || 0],
+        ['📦', 'Orders', allOrders.length], ['🚚', 'Delivered', delivered],
+        ['↩️', 'RTO', rto], ['🌿', 'Products', allProducts.length],
+        ['👥', 'Team', allMembers.length], ['🏢', 'Tenants', allTenants.length],
+        ['🎯', 'Conv%', conv + '%']
     ];
     
-    container.innerHTML = metrics.map(m => `
+    document.getElementById('metrics-bar').innerHTML = metrics.map(([icon, label, value]) => `
         <div class="metric-card">
-            <span class="metric-icon">${m.icon}</span>
-            <div class="metric-value">${m.value}</div>
-            <div class="metric-label">${m.label}</div>
+            <div style="font-size:1.5rem">${icon}</div>
+            <div class="metric-value">${value}</div>
+            <div class="metric-label">${label}</div>
         </div>
     `).join('');
 }
 
-// ============================================
-// RENDER KANBAN
-// ============================================
-
 function renderKanban() {
     const board = document.getElementById('kanban-board');
     board.innerHTML = '';
+    const colors = { 'New': '#fff3cd', 'Contacted': '#d1ecf1', 'Follow-up': '#e7d9ff', 'Interested': '#d4edda', 'Closed': '#d6d8db' };
     
-    STATUSES.forEach(status => {
-        const leads = currentLeads.filter(l => l.status === status);
+    allSettings.statuses.forEach(status => {
+        const leads = allLeads.filter(l => l.status === status);
         const col = document.createElement('div');
         col.className = 'kanban-column';
-        col.style.background = STATUS_COLORS[status];
-        col.dataset.status = status;
-        
+        col.style.background = colors[status] || '#e9ecef';
         col.innerHTML = `
-            <div class="kanban-column-header">
-                <span>${status}</span>
-                <span class="kanban-count">${leads.length}</span>
-            </div>
+            <div class="kanban-column-header"><span>${status}</span><span class="kanban-count">${leads.length}</span></div>
             <div class="kanban-cards" data-status="${status}">
-                ${leads.map(lead => createCardHTML(lead)).join('')}
+                ${leads.map(l => `
+                    <div class="lead-card" draggable="true" data-id="${l.id}">
+                        <div class="lead-card-header">
+                            <div class="lead-card-identity">
+                                <div class="lead-card-avatar">${(l.name || '?')[0]}</div>
+                                <span class="lead-card-name">${l.name}</span>
+                            </div>
+                            <span class="lead-card-time">${l.createdAt ? getTimeAgo(l.createdAt) : ''}</span>
+                        </div>
+                        <div class="lead-card-info"><p>📞 ${l.phone}</p>${l.assignedToName ? `<p>👤 ${l.assignedToName}</p>` : ''}</div>
+                        <div class="lead-card-tags">
+                            ${l.product ? `<span class="lead-tag tag-product">🌿 ${l.product}</span>` : ''}
+                            ${l.priority === 'Hot' ? '<span class="lead-tag tag-hot">🔥 Hot</span>' : ''}
+                        </div>
+                        <div class="lead-card-actions">
+                            <button class="btn-call" onclick="event.stopPropagation();callLead('${l.phone}')">📞</button>
+                            <button class="btn-wa" onclick="event.stopPropagation();waLead('${l.phone}')">💬</button>
+                            <button class="btn-move" onclick="event.stopPropagation();moveLead('${l.id}','${l.status}')">➡️</button>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `;
-        
         board.appendChild(col);
     });
     
-    setupDragDrop();
-}
-
-function createCardHTML(lead) {
-    const initials = (lead.name || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-    const timeAgo = getTimeAgo(lead.updatedAt || lead.createdAt);
-    
-    return `
-        <div class="lead-card" draggable="true" data-lead-id="${lead.id}" data-status="${lead.status}">
-            <div class="lead-card-header">
-                <div style="display:flex;align-items:center;">
-                    <div class="lead-card-avatar">${initials}</div>
-                    <span class="lead-card-name">${lead.name || 'Unknown'}</span>
-                </div>
-                <span class="lead-card-time">${timeAgo}</span>
-            </div>
-            <div class="lead-card-info">
-                <p>📞 ${lead.phone || 'N/A'}</p>
-                ${lead.city ? `<p>📍 ${lead.city}</p>` : ''}
-                ${lead.assignedToName ? `<p>👤 ${lead.assignedToName}</p>` : ''}
-            </div>
-            <div class="lead-card-tags">
-                ${lead.product ? `<span class="lead-tag tag-product">🌿 ${lead.product}</span>` : ''}
-                ${lead.priority === 'Hot' ? '<span class="lead-tag tag-hot">🔥 Hot</span>' : ''}
-                ${lead.source ? `<span class="lead-tag tag-source">📢 ${lead.source}</span>` : ''}
-            </div>
-            <div class="lead-card-actions">
-                <button class="btn-call" onclick="event.stopPropagation(); callLead('${lead.phone}')">📞</button>
-                <button class="btn-wa" onclick="event.stopPropagation(); waLead('${lead.phone}')">💬</button>
-                <button class="btn-move" onclick="event.stopPropagation(); moveLead('${lead.id}','${lead.status}')">➡️</button>
-            </div>
-        </div>
-    `;
-}
-
-function getTimeAgo(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-    if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-    if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
-    return Math.floor(seconds / 604800) + 'w ago';
-}
-
-// ============================================
-// DRAG & DROP
-// ============================================
-
-function setupDragDrop() {
-    document.querySelectorAll('.lead-card').forEach(card => {
-        card.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('leadId', card.dataset.leadId);
-            e.dataTransfer.setData('fromStatus', card.dataset.status);
-            card.classList.add('dragging');
-        });
-        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    // Drag & Drop
+    document.querySelectorAll('.lead-card').forEach(c => {
+        c.addEventListener('dragstart', e => e.dataTransfer.setData('leadId', c.dataset.id));
     });
-    
-    document.querySelectorAll('.kanban-cards').forEach(zone => {
-        zone.addEventListener('dragover', (e) => {
+    document.querySelectorAll('.kanban-cards').forEach(z => {
+        z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('drag-over'); });
+        z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
+        z.addEventListener('drop', async e => {
             e.preventDefault();
-            zone.classList.add('drag-over');
-        });
-        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-        zone.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            zone.classList.remove('drag-over');
+            z.classList.remove('drag-over');
             const leadId = e.dataTransfer.getData('leadId');
-            const fromStatus = e.dataTransfer.getData('fromStatus');
-            const toStatus = zone.dataset.status;
-            if (leadId && fromStatus !== toStatus) {
-                await updateLeadStatus(leadId, toStatus);
-            }
+            const status = z.dataset.status;
+            await db.collection('leads').doc(leadId).update({ status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            showToast('✅ Moved to ' + status);
+            loadAll();
         });
     });
 }
-
-// ============================================
-// RENDER LEADS TABLE
-// ============================================
 
 function renderLeadsTable() {
-    const container = document.getElementById('leads-table-container');
-    
-    if (currentLeads.length === 0) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">📭 No leads found</div>';
+    const c = document.getElementById('leads-table');
+    if (!allLeads.length) {
+        c.innerHTML = '<div class="empty-state"><span class="empty-icon">📭</span><h3>No Leads</h3></div>';
         return;
     }
-    
-    container.innerHTML = `
-        <div class="table-toolbar">
-            <input type="text" placeholder="🔍 Search..." oninput="filterLeadsTable(this.value)">
-            <select onchange="filterLeadsByStatus(this.value)">
-                <option value="All">All Status</option>
-                ${STATUSES.map(s => `<option value="${s}">${s}</option>`).join('')}
-            </select>
-        </div>
-        <table>
-            <thead>
-                <tr><th>Name</th><th>Phone</th><th>City</th><th>Product</th><th>Source</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Created</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="leads-table-body">
-                ${currentLeads.map(createTableRow).join('')}
-            </tbody>
-        </table>
-    `;
+    const colors = { 'New': '#fff3cd', 'Contacted': '#d1ecf1', 'Follow-up': '#e7d9ff', 'Interested': '#d4edda', 'Closed': '#d6d8db' };
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Product</th><th>Status</th><th>Priority</th><th>Assigned</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody>${allLeads.map(l => `<tr>
+        <td><strong>${l.name}</strong></td><td>${l.phone}</td><td>${l.product || '-'}</td>
+        <td><span class="status-badge" style="background:${colors[l.status] || '#e9ecef'}">${l.status}</span></td>
+        <td>${l.priority || 'Normal'}</td><td>${l.assignedToName || 'Unassigned'}</td>
+        <td>${l.createdAt ? getTimeAgo(l.createdAt) : '-'}</td>
+        <td>
+            <button style="background:#e3f0e5;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="callLead('${l.phone}')">📞</button>
+            <button style="background:#d4edda;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="waLead('${l.phone}')">💬</button>
+            <button style="background:#f8d7da;border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteLead('${l.id}')">🗑️</button>
+        </td>
+    </tr>`).join('')}</tbody></table>`;
 }
 
-function createTableRow(lead) {
-    return `
-        <tr>
-            <td><strong>${lead.name}</strong></td>
-            <td>${lead.phone}</td>
-            <td>${lead.city || '-'}</td>
-            <td>${lead.product || '-'}</td>
-            <td>${lead.source || '-'}</td>
-            <td>${lead.priority || 'Normal'}</td>
-            <td><span class="status-badge" style="background:${STATUS_COLORS[lead.status]};color:${STATUS_TEXT_COLORS[lead.status]};">${lead.status}</span></td>
-            <td>${lead.assignedToName || 'Unassigned'}</td>
-            <td>${lead.createdAt ? getTimeAgo(lead.createdAt) : '-'}</td>
-            <td>
-                <button style="padding:4px 8px;border:none;border-radius:12px;cursor:pointer;background:#e3f0e5;color:#1e7e34;" onclick="callLead('${lead.phone}')">📞</button>
-                <button style="padding:4px 8px;border:none;border-radius:12px;cursor:pointer;background:#d4edda;color:#155724;" onclick="waLead('${lead.phone}')">💬</button>
-            </td>
-        </tr>
-    `;
-}
-
-function filterLeadsTable(searchTerm) {
-    const filtered = currentLeads.filter(lead => {
-        if (!searchTerm) return true;
-        const term = searchTerm.toLowerCase();
-        return (lead.name || '').toLowerCase().includes(term) || (lead.phone || '').includes(term);
-    });
-    document.getElementById('leads-table-body').innerHTML = filtered.map(createTableRow).join('');
-}
-
-function filterLeadsByStatus(status) {
-    const filtered = status === 'All' ? currentLeads : currentLeads.filter(l => l.status === status);
-    document.getElementById('leads-table-body').innerHTML = filtered.map(createTableRow).join('');
-}
-
-// ============================================
-// RENDER TEAM MEMBERS
-// ============================================
-
-function renderTeamMembers() {
-    const container = document.getElementById('team-container');
-    
-    if (!currentUserProfile?.role === 'admin' && !currentUserProfile?.isSuperAdmin) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">🔒 Only admin can view team</div>';
+function renderOrdersTable() {
+    const c = document.getElementById('orders-table');
+    if (!allOrders.length) {
+        c.innerHTML = '<div class="empty-state"><span class="empty-icon">📦</span><h3>No Orders</h3></div>';
         return;
     }
-    
-    container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#2a5c3e;">👥 Team Members (${allTeamMembers.length})</h3>
-            <button class="btn btn-primary" onclick="openTeamModal()">+ Add Member</button>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Team</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                    ${allTeamMembers.map(member => `
-                        <tr>
-                            <td><strong>${member.name || 'N/A'}</strong></td>
-                            <td>${member.email}</td>
-                            <td>${member.phone || '-'}</td>
-                            <td><span class="status-badge" style="background:${member.role === 'admin' ? '#f8d7da' : member.role === 'team_lead' ? '#fff3cd' : '#d4edda'};color:#333;">${member.role}</span></td>
-                            <td>${member.team || 'All'}</td>
-                            <td>${member.isActive !== false ? '✅ Active' : '❌ Inactive'}</td>
-                            <td>
-                                <button class="btn btn-sm btn-danger" onclick="removeTeamMember('${member.id}')">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
+    const colors = { 'Order Placed': '#fff3cd', 'Confirmed': '#d1ecf1', 'Packed': '#e7d9ff', 'Dispatched': '#fff3cd', 'In Transit': '#d1ecf1', 'Out for Delivery': '#cce5ff', 'Delivered': '#d4edda', 'RTO': '#f8d7da' };
+    c.innerHTML = `<table><thead><tr><th>Order ID</th><th>Lead</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Courier</th><th>AWB</th><th>Address</th><th>Actions</th></tr></thead>
+    <tbody>${allOrders.map(o => `<tr>
+        <td><strong>${o.orderId || o.id.substring(0, 8)}</strong></td>
+        <td>${o.leadName || '-'}</td><td>${o.product}</td><td>${o.qty}</td><td>₹${o.amount}</td>
+        <td><span class="status-badge" style="background:${colors[o.status] || '#e9ecef'}">${o.status}</span></td>
+        <td>${o.courier || '-'}</td><td>${o.awb || '-'}</td><td>${o.city || ''} ${o.pincode || ''}</td>
+        <td>
+            <button style="background:var(--info-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="advanceOrder('${o.id}','${o.status}')">➡️</button>
+            <button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="markRTO('${o.id}')">↩️</button>
+        </td>
+    </tr>`).join('')}</tbody></table>`;
 }
 
-// ============================================
-// RENDER TENANTS
-// ============================================
+function renderProductsTable() {
+    const c = document.getElementById('products-table');
+    c.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:15px">
+        <h3 style="color:var(--primary)">🌿 Products (${allProducts.length})</h3>
+        <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Add</button></div>
+    <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead>
+    <tbody>${allProducts.map(p => `<tr>
+        <td><strong>${p.name}</strong></td><td>${p.category || '-'}</td><td>₹${p.price || 0}</td>
+        <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="deleteProduct('${p.id}')">🗑️</button></td>
+    </tr>`).join('')}</tbody></table>`;
+}
 
-function renderTenants() {
-    const container = document.getElementById('tenants-container');
-    
-    if (!currentUserProfile?.isSuperAdmin) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">🔒 Only Super Admin can manage tenants</div>';
+function renderTeamTable() {
+    const c = document.getElementById('team-table');
+    if (!allMembers.length) {
+        c.innerHTML = '<div class="empty-state"><span class="empty-icon">👥</span><h3>No Members</h3></div>';
         return;
     }
-    
-    container.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="color:#2a5c3e;">🏢 Tenants (${allTenants.length})</h3>
-            <button class="btn btn-primary" onclick="openTenantModal()">+ Create Tenant</button>
-        </div>
-        <table>
-            <thead>
-                <tr><th>Name</th><th>Plan</th><th>Status</th><th>Created</th></tr>
-            </thead>
-            <tbody>
-                ${allTenants.map(t => `
-                    <tr>
-                        <td><strong>${t.name}</strong></td>
-                        <td>${t.plan || 'Free'}</td>
-                        <td>${t.status || 'Active'}</td>
-                        <td>${t.createdAt ? getTimeAgo(t.createdAt) : '-'}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Team</th><th>Actions</th></tr></thead>
+    <tbody>${allMembers.map(m => `<tr>
+        <td><strong>${m.name || 'N/A'}</strong></td><td>${m.email}</td><td>${m.role}</td><td>${m.team || 'All'}</td>
+        <td><button style="background:var(--danger-bg);border:none;padding:4px 8px;border-radius:12px;cursor:pointer" onclick="removeMember('${m.id}')">🗑️</button></td>
+    </tr>`).join('')}</tbody></table>`;
 }
 
-// ============================================
-// RENDER SETTINGS
-// ============================================
+function renderTenantsTable() {
+    const c = document.getElementById('tenants-table');
+    if (!allTenants.length) {
+        c.innerHTML = '<div class="empty-state"><span class="empty-icon">🏢</span><h3>No Tenants</h3></div>';
+        return;
+    }
+    c.innerHTML = `<table><thead><tr><th>Name</th><th>Plan</th><th>Created</th></tr></thead>
+    <tbody>${allTenants.map(t => `<tr>
+        <td><strong>${t.name}</strong></td><td>${t.plan || 'Free'}</td><td>${t.createdAt ? getTimeAgo(t.createdAt) : '-'}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
 
 function renderSettings() {
-    const container = document.getElementById('settings-container');
-    
-    if (!currentUserProfile?.role === 'admin' && !currentUserProfile?.isSuperAdmin) {
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c757d;">🔒 Only admin can access settings</div>';
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="table-container">
-            <h3 style="color:#2a5c3e;margin-bottom:15px;">⚙️ Platform Settings</h3>
-            
-            <div class="form-group">
-                <label>Lead Statuses</label>
-                <input type="text" id="settings-statuses" value="${STATUSES.join(', ')}">
-                <small style="color:#6c757d;">Comma separated</small>
-            </div>
-            
-            <div class="form-group">
-                <label>Products</label>
-                <input type="text" id="settings-products" value="${PRODUCTS.join(', ')}">
-                <small style="color:#6c757d;">Comma separated</small>
-            </div>
-            
-            <div class="form-group">
-                <label>Lead Sources</label>
-                <input type="text" id="settings-sources" value="${SOURCES.join(', ')}">
-                <small style="color:#6c757d;">Comma separated</small>
-            </div>
-            
-            <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
-        </div>
-    `;
+    document.getElementById('settings-statuses').value = allSettings.statuses.join(', ');
+    document.getElementById('settings-sources').value = allSettings.sources.join(', ');
+    document.getElementById('settings-priorities').value = allSettings.priorities.join(', ');
+    document.getElementById('settings-couriers').value = allSettings.couriers.join(', ');
 }
 
-// ============================================
-// POPULATE AGENT DROPDOWN
-// ============================================
-
-function populateAgentDropdown() {
-    const select = document.getElementById('lead-assigned-to');
-    if (!select) return;
-    
-    const agents = allTeamMembers.filter(m => m.role === 'agent' || m.role === 'team_lead');
-    
-    select.innerHTML = '<option value="">Unassigned</option>' + agents.map(a => 
-        `<option value="${a.id}">${a.name || a.email}</option>`
-    ).join('');
+// ============ HELPERS ============
+function getTimeAgo(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    const s = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (s < 60) return 'Just now';
+    if (s < 3600) return Math.floor(s / 60) + 'm';
+    if (s < 86400) return Math.floor(s / 3600) + 'h';
+    return Math.floor(s / 86400) + 'd';
 }
 
-// ============================================
-// LEAD MODAL
-// ============================================
-
-function openLeadModal() {
-    document.getElementById('lead-modal').classList.add('active');
-    populateAgentDropdown();
+function populateDropdowns() {
+    document.getElementById('lead-product').innerHTML = '<option value="">Select</option>' + allProducts.map(p => `<option>${p.name}</option>`).join('');
+    document.getElementById('lead-source').innerHTML = '<option value="">Select</option>' + allSettings.sources.map(s => `<option>${s}</option>`).join('');
+    document.getElementById('lead-priority').innerHTML = '<option value="">Select</option>' + allSettings.priorities.map(p => `<option>${p}</option>`).join('');
+    document.getElementById('lead-assign').innerHTML = '<option value="">Unassigned</option>' + allMembers.filter(m => m.role !== 'admin').map(a => `<option value="${a.id}">${a.name || a.email}</option>`).join('');
+    document.getElementById('order-lead').innerHTML = '<option value="">Select Lead</option>' + allLeads.map(l => `<option value="${l.id}">${l.name} - ${l.phone}</option>`).join('');
+    document.getElementById('order-product').innerHTML = '<option value="">Select</option>' + allProducts.map(p => `<option>${p.name}</option>`).join('');
+    document.getElementById('order-courier').innerHTML = '<option value="">Select</option>' + allSettings.couriers.map(c => `<option>${c}</option>`).join('');
 }
 
-function closeLeadModal() {
-    document.getElementById('lead-modal').classList.remove('active');
-    ['lead-name', 'lead-phone', 'lead-email', 'lead-city', 'lead-notes'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('lead-product').value = '';
-    document.getElementById('lead-source').value = '';
-    document.getElementById('lead-priority').value = 'Normal';
-    document.getElementById('lead-assigned-to').value = '';
-}
+// ============ LEAD OPERATIONS ============
+function openLeadModal() { document.getElementById('lead-modal').classList.add('active'); populateDropdowns(); }
+function closeLeadModal() { document.getElementById('lead-modal').classList.remove('active'); }
 
 async function saveLead() {
     const name = document.getElementById('lead-name').value.trim();
     const phone = document.getElementById('lead-phone').value.trim();
-    const assignedTo = document.getElementById('lead-assigned-to').value;
-    
-    if (!name || !phone) {
-        showToast('Name and phone are required', 'error');
-        return;
-    }
-    
-    const assignedMember = allTeamMembers.find(m => m.id === assignedTo);
-    
-    const leadData = {
+    if (!name || !phone) { showToast('Name and phone required', 'error'); return; }
+    const assignId = document.getElementById('lead-assign').value;
+    const member = allMembers.find(m => m.id === assignId);
+    await db.collection('leads').add({
         name, phone,
         email: document.getElementById('lead-email').value.trim(),
         city: document.getElementById('lead-city').value.trim(),
@@ -666,260 +372,236 @@ async function saveLead() {
         source: document.getElementById('lead-source').value,
         priority: document.getElementById('lead-priority').value,
         notes: document.getElementById('lead-notes').value.trim(),
-        status: 'New',
-        tenantId: currentTenantId || null,
-        assignedTo: assignedTo || null,
-        assignedToName: assignedMember ? (assignedMember.name || assignedMember.email) : null,
+        status: 'New', tenantId,
+        assignedTo: assignId || null,
+        assignedToName: member ? (member.name || member.email) : null,
         createdBy: currentUser.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    try {
-        await db.collection('leads').add(leadData);
-        showToast('✅ Lead added successfully');
-        closeLeadModal();
-        await loadAllData();
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
-}
-
-// ============================================
-// TEAM MODAL
-// ============================================
-
-function openTeamModal() {
-    document.getElementById('team-modal').classList.add('active');
-}
-
-function closeTeamModal() {
-    document.getElementById('team-modal').classList.remove('active');
-    ['team-name', 'team-email', 'team-password', 'team-phone'].forEach(id => {
-        document.getElementById(id).value = '';
     });
+    showToast('✅ Lead added');
+    closeLeadModal();
+    loadAll();
 }
+
+async function deleteLead(id) {
+    if (!confirm('Delete?')) return;
+    await db.collection('leads').doc(id).delete();
+    showToast('✅ Deleted');
+    loadAll();
+}
+
+async function moveLead(id, current) {
+    const idx = allSettings.statuses.indexOf(current);
+    const next = allSettings.statuses[(idx + 1) % allSettings.statuses.length];
+    await db.collection('leads').doc(id).update({ status: next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('✅ ' + next);
+    loadAll();
+}
+
+// ============ ORDER OPERATIONS ============
+function openOrderModal() { document.getElementById('order-modal').classList.add('active'); populateDropdowns(); }
+function closeOrderModal() { document.getElementById('order-modal').classList.remove('active'); }
+
+async function saveOrder() {
+    const leadId = document.getElementById('order-lead').value;
+    const product = document.getElementById('order-product').value;
+    const qty = document.getElementById('order-qty').value;
+    const amount = document.getElementById('order-amount').value;
+    const payment = document.getElementById('order-payment').value;
+    const address1 = document.getElementById('order-address1').value.trim();
+    const address2 = document.getElementById('order-address2').value.trim();
+    const city = document.getElementById('order-city').value.trim();
+    const state = document.getElementById('order-state').value.trim();
+    const pincode = document.getElementById('order-pincode').value.trim();
+    const landmark = document.getElementById('order-landmark').value.trim();
+    const courier = document.getElementById('order-courier').value;
+    const warehouse = document.getElementById('order-warehouse').value;
+    
+    if (!leadId || !product || !qty || !amount || !address1 || !city || !state || !pincode) {
+        showToast('All required fields needed', 'error');
+        return;
+    }
+    
+    const lead = allLeads.find(l => l.id === leadId);
+    const awb = courier ? courier.substring(0, 2).toUpperCase() + Date.now().toString().slice(-10) : null;
+    
+    await db.collection('orders').add({
+        orderId: 'ORD-' + Date.now().toString().slice(-6),
+        leadId, leadName: lead?.name, leadPhone: lead?.phone,
+        product, qty: parseInt(qty), amount: parseFloat(amount),
+        paymentMethod: payment, address1, address2, city, state, pincode, landmark,
+        courier, warehouse, awb, status: 'Order Placed', tenantId,
+        createdBy: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: [{ status: 'Order Placed', at: new Date().toISOString() }]
+    });
+    
+    if (leadId) await db.collection('leads').doc(leadId).update({ status: 'Interested', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    
+    showToast('✅ Order created');
+    closeOrderModal();
+    loadAll();
+}
+
+async function advanceOrder(id, current) {
+    const idx = ORDER_STATUSES.indexOf(current);
+    if (idx === -1 || idx === ORDER_STATUSES.length - 1) return;
+    const next = ORDER_STATUSES[idx + 1];
+    await db.collection('orders').doc(id).update({
+        status: next,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: firebase.firestore.FieldValue.arrayUnion({ status: next, at: new Date().toISOString() })
+    });
+    showToast('✅ ' + next);
+    loadAll();
+}
+
+async function markRTO(id) {
+    if (!confirm('Mark RTO?')) return;
+    await db.collection('orders').doc(id).update({
+        status: 'RTO',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timeline: firebase.firestore.FieldValue.arrayUnion({ status: 'RTO', at: new Date().toISOString() })
+    });
+    showToast('↩️ RTO');
+    loadAll();
+}
+
+// ============ PRODUCT OPERATIONS ============
+function openProductModal() { document.getElementById('product-modal').classList.add('active'); }
+function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); }
+
+async function saveProduct() {
+    const name = document.getElementById('product-name').value.trim();
+    if (!name) { showToast('Name required', 'error'); return; }
+    await db.collection('products').add({
+        name,
+        category: document.getElementById('product-category').value.trim(),
+        price: parseFloat(document.getElementById('product-price').value) || 0,
+        description: document.getElementById('product-desc').value.trim(),
+        tenantId: tenantId || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('✅ Product added');
+    closeProductModal();
+    loadAll();
+}
+
+async function deleteProduct(id) {
+    if (!confirm('Delete?')) return;
+    await db.collection('products').doc(id).delete();
+    showToast('✅ Deleted');
+    loadAll();
+}
+
+// ============ TEAM OPERATIONS ============
+function openTeamModal() { document.getElementById('team-modal').classList.add('active'); }
+function closeTeamModal() { document.getElementById('team-modal').classList.remove('active'); }
 
 async function saveTeamMember() {
     const name = document.getElementById('team-name').value.trim();
     const email = document.getElementById('team-email').value.trim();
     const password = document.getElementById('team-password').value;
-    const phone = document.getElementById('team-phone').value.trim();
-    const role = document.getElementById('team-role').value;
-    const team = document.getElementById('team-group').value;
-    
-    if (!name || !email || !password) {
-        showToast('Name, email and password are required', 'error');
-        return;
-    }
-    
+    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
     try {
-        // Create auth user
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const userId = userCredential.user.uid;
-        
-        // Create Firestore profile
-        await db.collection('users').doc(userId).set({
-            name, email, phone,
-            role, team,
-            tenantId: currentTenantId || null,
-            isActive: true,
-            isOnline: false,
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection('users').doc(cred.user.uid).set({
+            name, email,
+            role: document.getElementById('team-role').value,
+            team: document.getElementById('team-group').value,
+            tenantId, isActive: true,
             createdBy: currentUser.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        showToast('✅ Team member added');
+        showToast('✅ Member added');
         closeTeamModal();
-        await loadAllData();
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
+        loadAll();
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
-async function removeTeamMember(userId) {
-    if (!confirm('Remove this team member?')) return;
-    
-    try {
-        await db.collection('users').doc(userId).update({
-            isActive: false,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast('✅ Member deactivated');
-        await loadAllData();
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
+async function removeMember(id) {
+    if (!confirm('Remove?')) return;
+    await db.collection('users').doc(id).update({ isActive: false });
+    showToast('✅ Deactivated');
+    loadAll();
 }
 
-// ============================================
-// TENANT MODAL
-// ============================================
-
-function openTenantModal() {
-    document.getElementById('tenant-modal').classList.add('active');
-}
-
-function closeTenantModal() {
-    document.getElementById('tenant-modal').classList.remove('active');
-    ['tenant-name', 'tenant-admin-email', 'tenant-admin-password'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-}
+// ============ TENANT OPERATIONS ============
+function openTenantModal() { document.getElementById('tenant-modal').classList.add('active'); }
+function closeTenantModal() { document.getElementById('tenant-modal').classList.remove('active'); }
 
 async function saveTenant() {
     const name = document.getElementById('tenant-name').value.trim();
-    const plan = document.getElementById('tenant-plan').value;
-    const adminEmail = document.getElementById('tenant-admin-email').value.trim();
-    const adminPassword = document.getElementById('tenant-admin-password').value;
-    
-    if (!name || !adminEmail || !adminPassword) {
-        showToast('Tenant name, admin email and password required', 'error');
-        return;
-    }
-    
+    const email = document.getElementById('tenant-email').value.trim();
+    const password = document.getElementById('tenant-password').value;
+    if (!name || !email || !password) { showToast('All fields required', 'error'); return; }
     try {
-        // Create tenant
         const tenantRef = await db.collection('tenants').add({
-            name, plan,
-            status: 'Active',
+            name, plan: 'Free', status: 'Active',
             createdBy: currentUser.uid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        // Create tenant admin user
-        const userCredential = await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
-        
-        await db.collection('users').doc(userCredential.user.uid).set({
-            name: name + ' Admin',
-            email: adminEmail,
-            role: 'admin',
-            tenantId: tenantRef.id,
-            team: 'All',
-            isActive: true,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection('users').doc(cred.user.uid).set({
+            name: name + ' Admin', email, role: 'admin', tenantId: tenantRef.id,
+            isActive: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        showToast('✅ Tenant created successfully');
+        showToast('✅ Tenant created');
         closeTenantModal();
-        await loadAllData();
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
+        loadAll();
+    } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
-// ============================================
-// SETTINGS
-// ============================================
-
+// ============ SETTINGS ============
 async function saveSettings() {
     const statuses = document.getElementById('settings-statuses').value.split(',').map(s => s.trim()).filter(Boolean);
-    const products = document.getElementById('settings-products').value.split(',').map(s => s.trim()).filter(Boolean);
     const sources = document.getElementById('settings-sources').value.split(',').map(s => s.trim()).filter(Boolean);
+    const priorities = document.getElementById('settings-priorities').value.split(',').map(s => s.trim()).filter(Boolean);
+    const couriers = document.getElementById('settings-couriers').value.split(',').map(s => s.trim()).filter(Boolean);
     
-    try {
-        await db.collection('settings').doc('platform').set({
-            statuses, products, sources,
-            updatedBy: currentUser.uid,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast('✅ Settings saved');
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
-}
-
-// ============================================
-// UPDATE LEAD STATUS
-// ============================================
-
-async function updateLeadStatus(leadId, newStatus) {
-    try {
-        await db.collection('leads').doc(leadId).update({
-            status: newStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast('✅ Moved to ' + newStatus);
-        await loadAllData();
-    } catch (error) {
-        showToast('Error: ' + error.message, 'error');
-    }
-}
-
-async function moveLead(leadId, currentStatus) {
-    const idx = STATUSES.indexOf(currentStatus);
-    const nextStatus = STATUSES[(idx + 1) % STATUSES.length];
-    await updateLeadStatus(leadId, nextStatus);
-}
-
-// ============================================
-// QUICK ACTIONS
-// ============================================
-
-function callLead(phone) {
-    if (phone) window.location.href = 'tel:+91' + phone.replace(/[^0-9]/g, '');
-}
-
-function waLead(phone) {
-    if (phone) window.open('https://wa.me/91' + phone.replace(/[^0-9]/g, ''), '_blank');
-}
-
-// ============================================
-// TAB SWITCHING
-// ============================================
-
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tabName);
+    await db.collection('settings').doc('platform').set({
+        statuses, sources, priorities, couriers,
+        updatedBy: currentUser.uid,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === 'tab-' + tabName);
-    });
+    allSettings = { statuses, sources, priorities, couriers };
+    showToast('✅ Settings saved');
+    loadAll();
 }
 
-// ============================================
-// TOAST
-// ============================================
+// ============ QUICK ACTIONS ============
+function callLead(phone) { if (phone) window.location.href = 'tel:+91' + phone.replace(/[^0-9]/g, ''); }
+function waLead(phone) { if (phone) window.open('https://wa.me/91' + phone.replace(/[^0-9]/g, ''), '_blank'); }
 
-function showToast(message, type = 'success') {
+// ============ TAB SWITCH ============
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + tab));
+}
+
+// ============ TOAST ============
+function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = 'toast toast-' + type;
-    toast.textContent = message;
+    toast.textContent = msg;
     toast.onclick = () => toast.remove();
     container.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
+        toast.style.transition = 'opacity .3s';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// ============================================
-// MODAL OUTSIDE CLICK
-// ============================================
-
-document.querySelectorAll('.modal-overlay').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
+// ============ MODAL OUTSIDE CLICK ============
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => {
+        if (e.target === m) m.classList.remove('active');
     });
 });
 
-// ============================================
-// KEYBOARD SHORTCUTS
-// ============================================
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
-    }
-    if (e.ctrlKey && e.key === 'n') {
-        e.preventDefault();
-        openLeadModal();
-    }
-});
-
-console.log('✅ Aahar Shudhi Multi-Tenant System Ready');
+console.log('✅ Aahar Shudhi System Loaded');
+console.log('📋 Features: Multi-Tenant, Kanban, Orders, Products, Team, Settings');
